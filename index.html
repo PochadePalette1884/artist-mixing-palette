@@ -541,6 +541,7 @@ html,body{overflow-x:clip} body{margin:0}
         <button class="fsbtn" id="fsBtn" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path id="fsIcon" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
       <div class="tree-wrap">
         <canvas id="wheel" role="img" aria-label="Rotating 3D Munsell tree showing the pigments, the reachable mixtures and the current mix"></canvas>
+        <canvas id="inside" role="img" aria-label="The painting wrapped around the horizon, with its colors as a cloud of chips in the middle"></canvas>
         <div class="zoomctl" role="group" aria-label="Zoom"><button id="zoomIn" aria-label="Zoom in">+</button><span class="zl" id="zoomLab">1×</span><button id="zoomOut" aria-label="Zoom out">−</button><button id="zoomReset" aria-label="Reset zoom and position" hidden>Reset</button></div>
         <div class="picked" id="picked" hidden>
         <p class="hint" id="pkMsg" hidden></p>
@@ -558,7 +559,8 @@ html,body{overflow-x:clip} body{margin:0}
         </div>
       </div>
       </div>
-      <p class="tree-hint"><span id="hintLead">Tap any color on the tree to see its mix.</span> Drag to turn. Zoom with the mouse wheel, + and −, or a pinch, and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</p>
+      <p class="tree-hint" id="insideHint">Tap any chip to see where it is in the painting and its closest mix. Drag to look around. Zoom with the mouse wheel or a pinch.</p>
+      <p class="tree-hint" id="treeHint"><span id="hintLead">Tap any color on the tree to see its mix.</span> Drag to turn. Zoom with the mouse wheel, + and −, or a pinch, and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</p>
       <div class="tree-mode">
         <span class="label">Add a painting</span>
         <div class="pt-bar" id="ptBar">
@@ -574,7 +576,7 @@ html,body{overflow-x:clip} body{margin:0}
       </div>
       <div class="tree-bar">
         <label class="tilt" for="tilt">Tilt <input type="range" id="tilt" min="-90" max="90" step="1" value="17" aria-label="Tilt: look from below or from above"> <span class="mono" id="tiltLab" style="min-width:5.5em">from above</span></label>
-        <div class="tree-ctl"><button id="spinBtn" aria-pressed="false">Rotate</button><button id="animBtn" class="pal-only" aria-pressed="false">Play paths</button><button id="viewBtn">Top view</button><button id="planeBtn" aria-pressed="false">Cross planes</button></div>
+        <div class="tree-ctl"><button id="insideBtn" aria-pressed="false">Inside the painting</button><button id="droneBtn" aria-pressed="false">Drone flight</button><button id="spinBtn" aria-pressed="false">Rotate</button><button id="animBtn" class="pal-only" aria-pressed="false">Play paths</button><button id="viewBtn">Top view</button><button id="planeBtn" aria-pressed="false">Cross planes</button></div>
       </div>
       <div class="planes" id="planes" hidden>
         <div class="planes-head"><span class="label">Cross planes · value 9 to 1</span><span class="hint" id="planesHint">Tap a plane to see it alone on the tree.</span></div>
@@ -665,6 +667,15 @@ html,body{overflow-x:clip} body{margin:0}
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
 
+<style id="inside-css">
+#inside{display:none; touch-action:none}
+body.mode-inside #inside{display:block}
+body.mode-inside #wheel{display:none}
+body.mode-inside .zoomctl, body.mode-inside .tilt, body.mode-inside #spinBtn, body.mode-inside #viewBtn, body.mode-inside #planeBtn, body.mode-inside #planes, body.mode-inside #treeHint{display:none!important}
+body.mode-inside .tree-bar{justify-content:flex-end}
+body:not(.mode-inside) #droneBtn, body:not(.mode-inside) #insideHint{display:none}
+body:not(.mode-painting) #insideBtn{display:none}
+</style>
 <script>
 // Spectral Kubelka-Munk pigment engine
 const WL = []; for (let l = 400; l <= 700; l += 10) WL.push(l);
@@ -1202,7 +1213,7 @@ function buildPainting(im) {
   const d = cx.getImageData(0, 0, w, h).data, n = w * h, rnd = mulberry(1234);
   const pick = count => { const out = []; const step = n / count; for (let k = 0; k < count && k < n; k++) { const i = Math.min(n - 1, Math.floor(k * step + rnd() * step)), o = i * 4;
     const rgb = [d[o], d[o + 1], d[o + 2]], m = munsellOfRgb(rgb); out.push({ p: pt3(m), hex: m.hex, rgb, x: (i % w + 0.5) / w, y: (Math.floor(i / w) + 0.5) / h, m, raw: m }); } return out; };
-  PT.base = pick(Math.min(6000, n)); PT.dense = pick(Math.min(30000, n)); PT.key = 'pt' + Date.now();
+  PT.base = pick(Math.min(6000, n)); PT.dense = pick(Math.min(30000, n)); PT.key = 'pt' + Date.now(); PT.im = im;
   const tc = document.createElement('canvas'), ts = Math.min(1, 360 / Math.max(w, h)); tc.width = Math.round(w * ts); tc.height = Math.round(h * ts); tc.getContext('2d').drawImage(im, 0, 0, tc.width, tc.height);
   PT.thumb = tc.toDataURL('image/jpeg', 0.85); PT.w = w; PT.h = h;
   const bc = document.createElement('canvas'), bs = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight)); bc.width = Math.round(im.naturalWidth * bs); bc.height = Math.round(im.naturalHeight * bs); bc.getContext('2d').drawImage(im, 0, 0, bc.width, bc.height);
@@ -2128,6 +2139,7 @@ function renderPalLists() {
 }
 function setTreeMode(m) {
   if (ANIM.on) stopAnim();
+  if (m !== 'painting' && window.INSIDE_VIEW) window.INSIDE_VIEW.exit();
   state.tree = m; document.body.classList.toggle('mode-painting', m === 'painting');
   renderPalLists(); $('ptNote').hidden = m !== 'painting';
   $('cloudLab').textContent = m === 'painting' ? 'Painting colors' : 'Reachable colors';
@@ -2450,6 +2462,173 @@ $('collRow').addEventListener('click', e => { const item = e.target.closest('.co
   try { new ResizeObserver(re).observe(pk); } catch (e) {}
   new MutationObserver(re).observe(pk, { attributes: true, attributeFilter: ['hidden', 'class'] });
   new MutationObserver(re).observe($('treeCard'), { attributes: true, attributeFilter: ['class'] });
+})();
+
+/* ---------- Inside the painting: the painting wrapped around the horizon, its colors as a cloud of chips in the middle ---------- */
+(function () {
+  const cv = $('inside'), btn = $('insideBtn'), dBtn = $('droneBtn'); if (!cv || !btn) return;
+  let gl = null, pBG, pCH, vaoBG, vaoCH, instBuf, tex, raf = 0, on = false, sig = '', samples = [], nInst = 0, HC = 90, fog = [0.4, 0.4, 0.4], lastPick = undefined, lastT = 0;
+  const D = 70, TARGET = [0, 0, 5.5], HS = 0.06;
+  const VS_BG = `#version 300 es
+in vec2 aP; out vec2 vP; void main(){ vP = aP; gl_Position = vec4(aP, 0.999, 1.0); }`;
+  const FS_BG = `#version 300 es
+precision highp float; in vec2 vP; out vec4 o;
+uniform vec3 uEye, uRight, uUp, uFwd; uniform vec2 uTan; uniform float uD, uHC, uZtop; uniform sampler2D uTex;
+void main(){
+  vec3 d = uFwd + vP.x * uTan.x * uRight + vP.y * uTan.y * uUp;
+  float a = dot(d.xy, d.xy) + 1e-9, b = dot(uEye.xy, d.xy), c = dot(uEye.xy, uEye.xy) - uD * uD;
+  float s = (-b + sqrt(max(b * b - a * c, 0.0))) / a; vec3 h = uEye + s * d;
+  float u = -atan(h.y, h.x) / 6.28318530718 * 4.0, v = (uZtop - h.z) / uHC;
+  float dv = max(max(-v, v - 1.0), 0.0);
+  o = vec4(textureLod(uTex, vec2(u, clamp(v, 0.0, 1.0)), 8.0 * smoothstep(0.0, 0.035, dv)).rgb, 1.0);
+}`;
+  const VS_CH = `#version 300 es
+in vec3 aP; in vec3 aN; in vec3 aCenter; in vec3 aColor; in vec3 aScale;
+uniform mat4 uVP; uniform vec3 uEye; uniform int uMark;
+out vec3 vCol; out float vFog; out vec3 vL; out vec3 vNl; out float vMk;
+void main(){
+  float r = length(aCenter.xy); vec2 u = r > 1e-4 ? aCenter.xy / r : vec2(1.0, 0.0); vec2 n = vec2(-u.y, u.x);
+  vec3 l = aP * aScale; vec3 w = aCenter + vec3(u * l.x + n * l.y, l.z);
+  vec3 wn = normalize(vec3(u * aN.x + n * aN.y, aN.z));
+  // faces keep the sampled color: the lit ones show it exactly, the others are only a touch deeper so the chip still reads as a solid
+  float lam = 0.9 + 0.1 * clamp(dot(wn, normalize(vec3(0.35, -0.5, 0.8))) / 0.48, 0.0, 1.0);
+  bool mk = gl_InstanceID == uMark;
+  vCol = aColor * (mk ? 1.0 : lam); vFog = 1.0; vL = aP; vNl = aN; vMk = mk ? 1.0 : 0.0;
+  gl_Position = uVP * vec4(w, 1.0);
+}`;
+  const FS_CH = `#version 300 es
+precision highp float; in vec3 vCol; in float vFog; in vec3 vL; in vec3 vNl; in float vMk; uniform vec3 uFogC; out vec4 o;
+void main(){
+  vec3 c = mix(uFogC, vCol, vFog);
+  if (vMk > 0.5) {                                             // a thin black line along the edges of the picked chip
+    vec3 q = abs(vL) * (1.0 - abs(vNl)); float e = max(q.x, max(q.y, q.z)), fw = fwidth(e);
+    c = mix(c, vec3(0.0), smoothstep(1.0 - 1.5 * fw, 1.0 - 0.5 * fw, e));
+  }
+  o = vec4(c, 1.0);
+}`;
+  function init() {
+    gl = cv.getContext('webgl2', { antialias: true, alpha: false }); if (!gl) return false;
+    const prog = (vs, fs, bind) => { const p = gl.createProgram();
+      for (const [t, s] of [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]]) { const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)); gl.attachShader(p, sh); }
+      if (bind) bind(p); gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); return p; };
+    pBG = prog(VS_BG, FS_BG, p => gl.bindAttribLocation(p, 0, 'aP')); pCH = prog(VS_CH, FS_CH);
+    vaoBG = gl.createVertexArray(); gl.bindVertexArray(vaoBG);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    const cube = [], F = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    for (const n of F) { const a = [n[1], n[2], n[0]], b = [n[1]*a[2]-n[2]*a[1], n[2]*a[0]-n[0]*a[2], n[0]*a[1]-n[1]*a[0]];
+      for (const [s, t] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]) cube.push(n[0]+a[0]*s+b[0]*t, n[1]+a[1]*s+b[1]*t, n[2]+a[2]*s+b[2]*t, n[0], n[1], n[2]); }
+    vaoCH = gl.createVertexArray(); gl.bindVertexArray(vaoCH);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube), gl.STATIC_DRAW);
+    const loc = n => gl.getAttribLocation(pCH, n);
+    gl.enableVertexAttribArray(loc('aP')); gl.vertexAttribPointer(loc('aP'), 3, gl.FLOAT, false, 24, 0);
+    gl.enableVertexAttribArray(loc('aN')); gl.vertexAttribPointer(loc('aN'), 3, gl.FLOAT, false, 24, 12);
+    instBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
+    ['aCenter', 'aColor', 'aScale'].forEach((n, i) => { const l = loc(n); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 3, gl.FLOAT, false, 36, i * 12); gl.vertexAttribDivisor(l, 1); });
+    gl.bindVertexArray(null); tex = gl.createTexture(); return true;
+  }
+  // hue runs clockwise seen from above, the same way round as the tree (and the Munsell hue circle)
+  const posOf = m => { const th = -(m.hue - 25) / 100 * 2 * Math.PI, r = m.chroma / 2; return [r * Math.cos(th), r * Math.sin(th), m.V]; };
+  const rgbOf = hex => [parseInt(hex.slice(1, 3), 16) / 255, parseInt(hex.slice(3, 5), 16) / 255, parseInt(hex.slice(5, 7), 16) / 255];
+  const signature = () => PT.key + '|' + state.palette + '|' + (PT.dense[0] ? PT.dense[0].hex : '');
+  function build() {
+    samples = PT.dense.length ? PT.dense : PT.base; sig = signature(); lastPick = undefined;
+    const data = new Float32Array((samples.length + 12) * 9); let o = 0, mr = 0, mg = 0, mb = 0;
+    samples.forEach(s => { const p = posOf(s.m), c = rgbOf(s.hex); s.q = p; mr += c[0]; mg += c[1]; mb += c[2]; data.set([p[0], p[1], p[2], c[0], c[1], c[2], HS, HS, HS], o); o += 9; });
+    for (let k = 0; k <= 10; k++) { const c = rgbOf(lab2hex(k * 10, 0, 0)); data.set([0, 0, k, c[0], c[1], c[2], 0.05, 0.05, 0.5], o); o += 9; }
+    data.set([0, 0, -999, 1, 1, 1, 0, 0, 0], o);                       // the last one marks the picked color
+    nInst = samples.length + 12; const n = Math.max(1, samples.length); fog = [mr / n * 0.9, mg / n * 0.9, mb / n * 0.9];
+    gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    // the painting four times around the horizon, its right edge melted into its left so the joins are soft
+    const img = PT.im, iw = img.naturalWidth, ih = img.naturalHeight, maxT = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    let TW = Math.min(2048, Math.round(iw * 0.9)), W0 = Math.round(TW / 0.9), PH = Math.round(W0 * ih / iw);
+    if (PH > maxT) { const k = maxT / PH; TW = Math.round(TW * k); W0 = Math.round(W0 * k); PH = maxT; }
+    const ov = Math.max(1, W0 - TW), c2 = document.createElement('canvas'); c2.width = TW; c2.height = PH; const x2 = c2.getContext('2d');
+    x2.drawImage(img, 0, 0, iw * TW / W0, ih, 0, 0, TW, PH);
+    const c3 = document.createElement('canvas'); c3.width = ov; c3.height = PH; const x3 = c3.getContext('2d');
+    x3.drawImage(img, iw * TW / W0, 0, iw * ov / W0, ih, 0, 0, ov, PH);
+    x3.globalCompositeOperation = 'destination-in'; const gr = x3.createLinearGradient(0, 0, ov, 0); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x3.fillStyle = gr; x3.fillRect(0, 0, ov, PH); x2.drawImage(c3, 0, 0);
+    gl.bindTexture(gl.TEXTURE_2D, tex); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, c2); gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    HC = (2 * Math.PI * D / 4) * PH / TW;
+  }
+  function markPick() {
+    const pk = PICK.cur || null; if (pk === lastPick) return; lastPick = pk;
+    const d = new Float32Array(9); if (pk && pk.a) { const p = posOf(pk.a), c = rgbOf(pk.a.hex); d.set([p[0], p[1], p[2], c[0], c[1], c[2], HS * 2.6, HS * 2.6, HS * 2.6]); } else d.set([0, 0, -999, 1, 1, 1, 0, 0, 0]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, instBuf); gl.bufferSubData(gl.ARRAY_BUFFER, (nInst - 1) * 36, d);
+  }
+  // camera: free orbit, or the drone's set path
+  const R0 = 5.4, KT = [0, 7, 13, 18, 23, 27, 30], KTH = [300, 385, 455, 525, 590, 640, 660], KR = [2.8*R0, 1.9*R0, 1.5*R0, 1.45*R0, 1.5*R0, 1.9*R0, 2.8*R0], KZ = [9, 5.5, 1.0, 1.5, 6, 10, 9];
+  function spline(K, t, wrap) { const n = KT.length - 1; t = ((t % 30) + 30) % 30; let i = 0; while (i < n - 1 && t >= KT[i + 1]) i++;
+    const P = j => { const m = ((j % n) + n) % n, lap = Math.floor(j / n); return [KT[m] + 30 * lap, K[m] + wrap * lap]; };
+    const [t0, p0] = P(i - 1), [t1, p1] = P(i), [t2, p2] = P(i + 1), [t3, p3] = P(i + 2);
+    const m1 = (p2 - p0) / (t2 - t0), m2 = (p3 - p1) / (t3 - t1), h = t2 - t1, s = (t - t1) / h, s2 = s * s, s3 = s2 * s;
+    return (2*s3 - 3*s2 + 1) * p1 + (s3 - 2*s2 + s) * h * m1 + (-2*s3 + 3*s2) * p2 + (s3 - s2) * h * m2; }
+  const droneEye = t => { const th = spline(KTH, t, 360) * Math.PI / 180, r = spline(KR, t, 0); return [r * Math.cos(th), r * Math.sin(th), spline(KZ, t, 0)]; };
+  const cam = { az: 0, el: 0, dist: 15 }; let drone = false, droneT = 0;
+  const setFromEye = e => { const dx = e[0] - TARGET[0], dy = e[1] - TARGET[1], dz = e[2] - TARGET[2]; cam.dist = Math.hypot(dx, dy, dz); cam.az = Math.atan2(dy, dx); cam.el = Math.asin(dz / cam.dist); };
+  const orbitEye = () => { const c = Math.cos(cam.el); return [TARGET[0] + cam.dist * c * Math.cos(cam.az), TARGET[1] + cam.dist * c * Math.sin(cam.az), TARGET[2] + cam.dist * Math.sin(cam.el)]; };
+  setFromEye(droneEye(0));
+  const norm = v => { const l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; };
+  const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+  function basis() { const eye = drone ? droneEye(droneT) : orbitEye(), f = norm([TARGET[0]-eye[0], TARGET[1]-eye[1], TARGET[2]-eye[2]]), r = norm(cross(f, [0, 0, 1])), u = cross(r, f);
+    const asp = cv.width / Math.max(1, cv.height), ty = Math.tan((asp < 1 ? 62 : 44) * Math.PI / 360); return { eye, f, r, u, tx: ty * asp, ty }; }
+  function frame(now) {
+    if (!on) return; raf = requestAnimationFrame(frame);
+    const dt = Math.min(0.1, (now - lastT) / 1000 || 0); lastT = now; if (drone) droneT = (droneT + dt) % 30;
+    if (signature() !== sig) build(); markPick();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr); if (!w || !h) return;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; } gl.viewport(0, 0, w, h);
+    const b = basis(), near = 0.05, far = 400, fy = 1 / b.ty, fx = 1 / b.tx, U = (p, n) => gl.getUniformLocation(p, n);
+    const V = [b.r[0], b.u[0], -b.f[0], 0, b.r[1], b.u[1], -b.f[1], 0, b.r[2], b.u[2], -b.f[2], 0, -dot(b.r, b.eye), -dot(b.u, b.eye), dot(b.f, b.eye), 1];
+    const P = [fx,0,0,0, 0,fy,0,0, 0,0,(far+near)/(near-far),-1, 0,0,2*far*near/(near-far),0], VP = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += P[k*4+r] * V[c*4+k]; VP[c*4+r] = s; }
+    gl.disable(gl.DEPTH_TEST); gl.useProgram(pBG); gl.bindVertexArray(vaoBG); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.uniform3fv(U(pBG, 'uEye'), b.eye); gl.uniform3fv(U(pBG, 'uRight'), b.r); gl.uniform3fv(U(pBG, 'uUp'), b.u); gl.uniform3fv(U(pBG, 'uFwd'), b.f);
+    gl.uniform2f(U(pBG, 'uTan'), b.tx, b.ty); gl.uniform1f(U(pBG, 'uD'), D); gl.uniform1f(U(pBG, 'uHC'), HC); gl.uniform1f(U(pBG, 'uZtop'), HC / 2); gl.uniform1i(U(pBG, 'uTex'), 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.enable(gl.DEPTH_TEST); gl.clear(gl.DEPTH_BUFFER_BIT); gl.useProgram(pCH); gl.bindVertexArray(vaoCH);
+    gl.uniformMatrix4fv(U(pCH, 'uVP'), false, VP); gl.uniform3fv(U(pCH, 'uEye'), b.eye); gl.uniform3fv(U(pCH, 'uFogC'), fog); gl.uniform1i(U(pCH, 'uMark'), nInst - 1);
+    gl.drawArraysInstanced(gl.TRIANGLES, 0, 36, nInst);
+  }
+  function stopDrone() { if (!drone) return; setFromEye(droneEye(droneT)); drone = false; dBtn.setAttribute('aria-pressed', 'false'); dBtn.textContent = 'Drone flight'; }
+  function enter() {
+    if (!PT.dense.length || !PT.im) { $('ptStats').textContent = 'Add a painting first, then step inside it.'; return; }
+    try { if (!gl && !init()) throw new Error('no webgl2'); } catch (e) { gl = null; $('ptStats').textContent = 'This browser cannot draw the inside view. Try a current version of Safari, Chrome or Firefox.'; return; }
+    if (typeof ANIM !== 'undefined' && ANIM.on) stopAnim();
+    on = true; sig = ''; document.body.classList.add('mode-inside'); btn.setAttribute('aria-pressed', 'true'); btn.textContent = 'Back to the tree';
+    lastT = performance.now(); raf = requestAnimationFrame(frame);
+  }
+  function exit() {
+    if (!on) return; on = false; cancelAnimationFrame(raf); stopDrone();
+    document.body.classList.remove('mode-inside'); btn.setAttribute('aria-pressed', 'false'); btn.textContent = 'Inside the painting'; drawWheel();
+  }
+  window.INSIDE_VIEW = { exit, isOn: () => on };
+  btn.addEventListener('click', () => on ? exit() : enter());
+  dBtn.addEventListener('click', () => { if (drone) { stopDrone(); return; } drone = true; droneT = 0; dBtn.setAttribute('aria-pressed', 'true'); dBtn.textContent = 'Stop flight'; });
+  const pts = new Map(); let moved = 0, pinch = 0;
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); moved = 0; cv.classList.add('drag');
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+  cv.addEventListener('pointermove', e => { const p = pts.get(e.pointerId); if (!p) return; const dx = e.clientX - p[0], dy = e.clientY - p[1]; pts.set(e.pointerId, [e.clientX, e.clientY]); moved += Math.abs(dx) + Math.abs(dy);
+    if (moved > 6) stopDrone();
+    if (pts.size === 1 && !drone) { cam.az -= dx * 0.006; cam.el = Math.max(-1.35, Math.min(1.35, cam.el + dy * 0.006)); }
+    else if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch > 0) cam.dist = Math.max(2.5, Math.min(55, cam.dist * pinch / d)); pinch = d; } });
+  cv.addEventListener('pointerup', e => { if (pts.size === 1 && moved <= 6) pick(e.clientX, e.clientY); pts.delete(e.pointerId); if (!pts.size) cv.classList.remove('drag'); });
+  cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); cv.classList.remove('drag'); });
+  cv.addEventListener('wheel', e => { e.preventDefault(); stopDrone(); cam.dist = Math.max(2.5, Math.min(55, cam.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+  // a tap picks the nearest chip under it and hands it to the same window the tree uses
+  function pick(cx, cy) { const rc = cv.getBoundingClientRect(), b = basis(), x = ((cx - rc.left) / rc.width * 2 - 1) * b.tx, y = (1 - (cy - rc.top) / rc.height * 2) * b.ty;
+    const d = norm([b.f[0] + x*b.r[0] + y*b.u[0], b.f[1] + x*b.r[1] + y*b.u[1], b.f[2] + x*b.r[2] + y*b.u[2]]), slack = matchMedia('(pointer: coarse)').matches ? 2.2 : 1; let best = null, bt = 1e9;
+    for (const s of samples) { const q = s.q, v = [q[0] - b.eye[0], q[1] - b.eye[1], q[2] - b.eye[2]], t = dot(v, d); if (t <= 0 || t >= bt) continue;
+      if (dot(v, v) - t * t < (0.012 + t * t * 0.00002) * slack) { bt = t; best = s; } }
+    if (!best) { PICK.cur = null; showPick(null, 'Nothing there. Tap on a colored chip.'); return; }
+    PICK.cur = { a: best.m, p: best.p, px: best }; showPick(PICK.cur);
+  }
 })();
 </script>
 
