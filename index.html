@@ -676,6 +676,35 @@ body.mode-inside .tree-bar{justify-content:flex-end}
 body:not(.mode-inside) #droneBtn, body:not(.mode-inside) #insideHint{display:none}
 body:not(.mode-painting) #insideBtn{display:none}
 </style>
+<style id="wide-css">
+@media (min-width:1500px){
+  .wrap{max-width:min(2280px, 94vw); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.12fr); grid-template-rows:auto auto auto 1fr; column-gap:28px; row-gap:22px; align-items:start}
+  .wrap > *{grid-column:1 / -1; min-width:0}
+  .hero-in{max-width:min(2280px, 94vw); padding-left:0; padding-right:0}
+  .hero{min-height:clamp(420px, 50vh, 620px)}
+  .main{display:contents}
+  .wrap > .pal-note, .wrap > .board, .main > .card:first-child{grid-column:1}
+  .wrap > .board{grid-row:3}
+  .main > .card:first-child{grid-row:4}
+  .main > #treeCard:not(.full){grid-column:2; grid-row:3 / span 2}
+  #treeCard:not(.full) .tree-wrap canvas{aspect-ratio:1 / 0.8}
+  .wrap > .board .dabs{grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:18px 10px}
+  .wrap > .board .dab .nm{font-size:.8rem; max-width:110px}
+  /* the pick window sits in its own band above the tree, so it never covers the colors */
+  body:not(.mode-inside) #treeCard:not(.full) .tree-wrap{display:flex; flex-direction:column; gap:14px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked{position:relative; left:auto; right:auto; top:auto; bottom:auto; order:-1; box-shadow:none; background:var(--panel-2); padding:14px 16px; max-height:none; overflow:visible}
+  body:not(.mode-inside) #treeCard:not(.full) .zoomctl{top:auto; bottom:10px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-body{grid-template-columns:auto minmax(0,1fr); gap:20px; align-items:stretch}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-left{flex-direction:row; gap:12px; align-items:stretch}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-sw{width:150px; min-height:128px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-where{width:200px; align-self:center}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info{display:grid; grid-template-columns:minmax(230px,.6fr) minmax(0,1fr); grid-template-rows:auto 1fr; column-gap:28px; row-gap:10px; padding-right:84px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > div:first-child{grid-column:1; grid-row:1}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > .btn{grid-column:1; grid-row:2; align-self:end; justify-self:start}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-recipe{grid-column:2; grid-row:1 / span 2; align-self:center}
+  body:not(.mode-inside) #treeCard:not(.full) .picked .pk-btns{position:absolute; top:12px; right:12px}
+}
+</style>
 <script>
 // Spectral Kubelka-Munk pigment engine
 const WL = []; for (let l = 400; l <= 700; l += 10) WL.push(l);
@@ -1383,7 +1412,7 @@ function render() {
   const cs = getComputedStyle(document.documentElement), mono = cs.getPropertyValue('--mono');
   const ink = cs.getPropertyValue('--ink').trim(), line = cs.getPropertyValue('--line').trim(), muted = cs.getPropertyValue('--muted').trim(), accent = cs.getPropertyValue('--accent').trim();
   const Z = VIEW.zoom, G = 1 + (Z - 1) * 0.35; // marks grow a little as you zoom, positions spread fully
-  const FULL = cv.closest('.full') !== null, B = Math.min(W, H / (FULL ? 1.0 : 1.12)), S = B * (FULL ? 0.4 : B < 420 ? 0.36 : 0.33) * Z, cx = treeCX(W) + VIEW.px, cy = H * 0.5 + VIEW.py;
+  const FULL = cv.closest('.full') !== null, ROOMY = FULL || W > H * 1.1, B = Math.min(W, H / (ROOMY ? 1.0 : 1.12)), S = B * (ROOMY ? 0.4 : B < 420 ? 0.36 : 0.33) * Z, cx = treeCX(W) + VIEW.px, cy = H * 0.5 + VIEW.py;
   // perspective flattens out as the view nears straight down, so the top view reads like a true chroma chart:
   // a colour's distance from the trunk then matches the chroma rings whatever its value
   const topness = Math.max(0, (Math.abs(Math.sin(VIEW.pitch)) - 0.8) / 0.2), D = 3.4 + 60 * topness * topness;
