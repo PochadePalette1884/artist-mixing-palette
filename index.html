@@ -1229,8 +1229,8 @@ function buildPainting(im) {
   fitPainting(false);
   PICK.cur = null; showPick(null); cloudCache = null; dense.key = ''; drawWheel();
 }
-// keep the painting inside the selected palette's value range: its darkest and lightest pixels are
-// stretched onto the palette's darkest and lightest reachable mixes (photos record deeper darks than paint)
+// a painting's colors stay exactly as sampled. Only where its darkest or lightest pixels lie beyond what the palette's paint
+// can reach (photos record deeper darks than paint) is that end eased in to the palette's limit; nothing is ever stretched outward
 const palRangeCache = {};
 function palRange() {
   const key = state.palette + (PIG.tw.name);
@@ -1244,12 +1244,14 @@ function munsellOfLab(lab) {
 }
 function fitPainting(redraw = true) {
   if (!PT.dense.length) return;
-  const on = true; // always fit the painting to the palette's value range
+  const on = false; // show the painting's values exactly as sampled; set to true to ease in only what lies beyond the palette's value range
   const Ls = PT.dense.map(s => s.raw.lab[0]).sort((a, b) => a - b), pLo = Ls[Math.floor(Ls.length * 0.005)], pHi = Ls[Math.floor((Ls.length - 1) * 0.995)];
-  const [lo, hi] = palRange(), span = Math.max(1, pHi - pLo);
+  const [lo, hi] = palRange(), kLo = lo + 12, kHi = hi - 8;
+  const fitL = L0 => (pLo < lo && L0 < kLo) ? lo + Math.max(0, (L0 - pLo) / (kLo - pLo)) * (kLo - lo) : (pHi > hi && L0 > kHi) ? kHi + Math.min(1, (L0 - kHi) / (pHi - kHi)) * (hi - kHi) : L0;
   const apply = s => {
-    if (!on) { s.m = s.raw; } else {
-      const t = Math.max(0, Math.min(1, (s.raw.lab[0] - pLo) / span)), L = lo + t * (hi - lo), k = s.raw.lab[0] > 1 ? Math.min(1.2, L / s.raw.lab[0]) : 1;
+    const L = fitL(s.raw.lab[0]);
+    if (!on || L === s.raw.lab[0]) { s.m = s.raw; } else {
+      const k = s.raw.lab[0] > 1 ? Math.min(1.2, L / s.raw.lab[0]) : 1;
       // chroma follows the value change a little, so stretched darks do not turn neon
       const lab = [L, s.raw.lab[1] * Math.min(1, 0.6 + 0.4 * k), s.raw.lab[2] * Math.min(1, 0.6 + 0.4 * k)];
       s.m = munsellOfLab(lab);
