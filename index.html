@@ -479,6 +479,17 @@ html,body{overflow-x:clip} body{margin:0}
   </header>
   <p class="pal-note on-bg" id="palNote"></p>
 
+  <section class="card builder" id="builder" aria-label="Build a palette" hidden>
+    <div class="card-head"><h2>Build a palette</h2><div class="bd-head-r"><span class="label">30 common paints · your colors, your order</span><button class="x" id="bdClose" aria-label="Close the palette builder" title="Close without saving">×</button></div></div>
+    <div class="bd-top">
+      <label class="bd-name"><span class="label">Name</span><input id="bdName" type="text" maxlength="40" placeholder="My palette" autocomplete="off"></label>
+      <div class="bd-starts"><span class="label">Start from</span><div class="bd-start-row" id="bdStarts"></div></div>
+    </div>
+    <div class="bd-lib" id="bdLib"></div>
+    <div class="bd-order-wrap"><span class="label">Your colors, left to right <span class="bd-hintsm">drag to reorder, or use the arrows</span></span><div class="bd-order" id="bdOrder"></div></div>
+    <div class="bd-reach" id="bdReach"></div>
+    <div class="bd-acts"><button class="btn primary" id="bdSave">Save palette</button><button class="btn" id="bdShare" hidden>Copy share link</button><button class="btn bd-del" id="bdDelete" hidden>Delete palette</button><span class="bd-msg" id="bdMsg" role="status"></span></div>
+  </section>
   <section class="board" aria-label="Palette">
     <div class="dabs" id="dabs"></div>
     <div class="medrow">
@@ -668,6 +679,52 @@ html,body{overflow-x:clip} body{margin:0}
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
 
+<style id="builder-css">
+.builder{gap:14px}
+.bd-head-r{display:flex; align-items:center; gap:12px}
+.bd-top{display:flex; gap:22px; flex-wrap:wrap; align-items:flex-end}
+.bd-name{display:flex; flex-direction:column; gap:6px}
+.bd-name input{font:inherit; font-family:var(--display); font-size:1.2rem; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:7px 12px; width:min(320px, 80vw)}
+.bd-name input:focus{outline:none; border-color:var(--ink)}
+.bd-starts{display:flex; flex-direction:column; gap:6px}
+.bd-start-row{display:flex; gap:6px; flex-wrap:wrap}
+.bd-lib{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:12px 18px}
+.bd-fam h4{margin:0 0 6px; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.bd-fam-row{display:flex; flex-wrap:wrap; gap:6px}
+.bd-chip{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); background:var(--panel-2); color:var(--ink); border-radius:999px; padding:4px 11px 4px 5px; cursor:pointer; font:inherit; font-size:.8rem; line-height:1.15; text-align:left}
+.bd-chip:hover{border-color:var(--ink)}
+.bd-chip i{width:20px; height:20px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.bd-chip small{display:block; font-family:var(--mono); font-size:.62rem; color:var(--muted)}
+.bd-chip[aria-pressed="true"]{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); background:var(--panel)}
+.bd-chip[aria-pressed="true"]::after{content:"✓"; font-size:.75rem; margin-left:2px}
+.bd-hintsm{font-weight:400; letter-spacing:0; text-transform:none; margin-left:8px}
+.bd-order{display:flex; gap:8px; flex-wrap:wrap; min-height:62px; padding:8px; border:1px dashed var(--line); border-radius:12px; margin-top:6px}
+.bd-order:empty::before{content:"Tap paints above to add them to your palette."; color:var(--muted); font-size:.85rem; align-self:center; padding-left:6px}
+.bd-item{display:flex; flex-direction:column; align-items:center; gap:3px; width:84px; padding:6px 4px; border-radius:10px; background:var(--panel-2); border:1px solid transparent; cursor:grab; position:relative}
+.bd-item.dragging{opacity:.4} .bd-item.over{border-color:var(--ink)}
+.bd-item img{width:46px; height:46px; object-fit:contain; pointer-events:none}
+.bd-item .nm{font-size:.66rem; text-align:center; line-height:1.15; color:var(--ink)}
+.bd-item .mv{display:flex; gap:2px}
+.bd-item .mv button{border:0; background:none; color:var(--muted); cursor:pointer; font-size:.8rem; padding:0 5px; line-height:1}
+.bd-item .mv button:hover{color:var(--ink)}
+.bd-item .rm{position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; border:1px solid var(--line); background:var(--panel); color:var(--ink); font-size:.75rem; line-height:1; cursor:pointer; padding:0}
+.bd-reach{display:grid; grid-template-columns:minmax(0, 340px) minmax(0, 1fr); gap:14px 26px; align-items:start; background:var(--panel-2); border-radius:12px; padding:14px 16px}
+.bd-bars{display:grid; grid-template-columns:repeat(10, 1fr); gap:5px; align-items:end; height:118px}
+.bd-bar{display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end}
+.bd-bar .track{position:relative; width:100%; flex:1; border-radius:4px; background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px var(--line); overflow:hidden}
+.bd-bar .fill{position:absolute; left:0; right:0; bottom:0; border-radius:3px}
+.bd-bar span{font-family:var(--mono); font-size:.6rem; color:var(--muted)}
+.bd-reach h4{margin:0 0 6px; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.bd-notes{display:flex; flex-direction:column; gap:7px; font-size:.86rem; line-height:1.45}
+.bd-notes p{margin:0}
+.bd-notes .sug{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.bd-acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.bd-msg{font-size:.8rem; color:var(--muted)}
+.bd-del{margin-left:auto}
+.pal-row.pal-build{display:block; font-family:var(--body); font-weight:600; color:var(--ink); border-top:1px solid var(--line); border-radius:0 0 10px 10px; margin-top:6px; padding:11px 10px}
+.pal-edit{margin-left:8px; font-size:inherit}
+@media (max-width:700px){ .bd-reach{grid-template-columns:1fr} .bd-item{width:74px} }
+</style>
 <style id="pickcomp-css">
 .pk-acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
 .pk-compmsg{margin:6px 0 0; font-size:.8rem; color:var(--muted); line-height:1.4}
@@ -693,6 +750,12 @@ body:not(.mode-painting) #insideBtn{display:none}
   .wrap > .board{grid-row:3}
   .main > .card:first-child{grid-row:4}
   .main > #treeCard:not(.full){grid-column:2; grid-row:3 / span 2}
+  /* while building a palette: the builder takes the left column and the tree stays in view beside it */
+  body.building .wrap > .builder{grid-column:1; grid-row:3}
+  body.building .wrap > .board{grid-row:4}
+  body.building .main > .card:first-child{grid-row:5}
+  body.building .main > #treeCard:not(.full){grid-row:3 / span 3; position:sticky; top:14px; align-self:start}
+  body.building .bd-lib{grid-template-columns:repeat(auto-fill, minmax(230px, 1fr))}
   #treeCard:not(.full) .tree-wrap canvas{aspect-ratio:1 / 0.8}
   .wrap > .board .dabs{grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:18px 10px}
   .wrap > .board .dab .nm{font-size:.8rem; max-width:110px}
@@ -1004,7 +1067,7 @@ const PALETTES = {
   harding: { group: 'contemporary', name: 'Michael Harding Wide Range', dates: '15 colors', ids: ['tw', 'hcl', 'hcd', 'co', 'hcr', 'ac', 'mg', 'cv', 'huv', 'um', 'hpb', 'hpt', 'hpg', 'bgl', 'ib'], white: 'titanium', dabs: null,
     note: 'A contemporary palette of 15 colors from Michael Harding\u2019s current range, chosen to push mixes as far toward the edges of the tree as possible. Each hue around the circle gets its strongest pigment, the cadmiums carry the bright warm side, and the phthalos, alizarin and ultramarines reach the deep, dark colors the cadmiums cannot. Pigments follow his color chart; the colors are modeled, not measured from his tubes.' },
 };
-const PAL_GROUPS = [['mine', 'My palettes'], ['masters', 'Historical painters'], ['contemporary', 'Contemporary'], ['spectrum', 'From the spectrum']];
+const PAL_GROUPS = [['mine', 'My palettes'], ['custom', 'Your palettes'], ['masters', 'Historical painters'], ['contemporary', 'Contemporary'], ['spectrum', 'From the spectrum']];
 const TI_WHITE = { name: PIG.tw.name, op: PIG.tw.op, T: PIG.tw.T, R: PIG.tw.R, KS: PIG.tw.KS };
 const curPal = () => PALETTES[state.palette] || PALETTES.klein;
 const active = () => curPal().ids;
@@ -2113,6 +2176,7 @@ function setStrMode(m) {
 }
 function renderString() {
   if (STRN.mode === 'not') { renderNotationString(); return; }
+  if (!PIG[state.strA] || !PIG[state.strB] || state.strA === state.strB) { $('string1').innerHTML = '<p class="hint">Add at least two paints to the palette to see a string between them.</p>'; $('string2').innerHTML = ''; return; }
   const A = state.strA, B = state.strB, white = active().includes('tw') && A !== 'tw' && B !== 'tw';
   let r1 = '', r2 = '';
   for (let i = 0; i <= 10; i++) {
@@ -2291,9 +2355,9 @@ function renderPalLists() {
     if (!ks.length) return '';
     return `<h4>${label}</h4>` + ks.map(k => { const P = PALETTES[k];
       return `<button class="pal-row" role="option" data-pal="${k}" aria-selected="${k === state.palette}"><span class="pr-name">${nameH(P)}</span><span class="pr-n">${/colors/.test(P.dates || '') ? '' : P.ids.length + ' colors'}</span></button>`; }).join('');
-  }).join('');
+  }).join('') + '<button class="pal-row pal-build" data-build="1">+ Build your own palette</button>';
   $('palList').innerHTML = `<button class="pal-cur" id="palToggle" aria-haspopup="listbox" aria-expanded="${open}" aria-label="Palette: ${cur.name}. Choose another palette">
-      <span class="pc-text"><span class="pc-name">${cur.name}</span>${cur.dates ? `<span class="pc-dates">${cur.dates}</span>` : ''}<span class="pc-caret">${Object.keys(PALETTES).length} palettes ▾</span></span></button>
+      <span class="pc-text"><span class="pc-name">${cur.name}</span>${cur.dates ? `<span class="pc-dates">${cur.dates}</span>` : ''}<span class="pc-caret">${Object.keys(PALETTES).filter(k => !k.startsWith('__')).length} palettes ▾</span></span></button>
     <div class="pal-menu" id="palMenu" role="listbox" aria-label="Choose a palette"${open ? '' : ' hidden'}>${groups}</div>`;
   // the painting bar: switch the tree between the painting and the selected palette
   const v = $('ptView'); if (v) { v.hidden = !PT.thumb; v.textContent = state.tree === 'painting' ? 'Show palette' : 'Show painting'; }
@@ -2321,12 +2385,13 @@ function setPalette(key) {
   Object.assign(PIG.tw, { name: w.name, op: w.op, T: w.T, R: w.R, KS: w.KS });
   MASS.tw = hexOf({ tw: 1 }); TINT.tw = MASS.tw;
   if (pal.white === 'lead' && !LW_DAB) { try { LW_DAB = paintDab(11, 'mound', MASS.tw, MASS.tw, 0, false); } catch (e) { LW_DAB = GEN_DAB.tw; } }
-  state.mix = {}; const ids = active(); state.strA = ids.find(i => i !== 'tw'); state.strB = ids.filter(i => i !== 'tw')[1];
+  state.mix = {}; const ids = active(); state.strA = ids.find(i => i !== 'tw') || ids[0]; state.strB = ids.filter(i => i !== 'tw')[1] || ids.find(i => i !== state.strA) || state.strA;
   cloudCache = null; cloudKey = ''; dense.key = ''; if (typeof lineKey !== 'undefined') lineKey = ''; if (typeof MIXDB !== 'undefined') MIXDB = null;
   PICK.cur = null; showPick(null);
   renderPalLists();
   $('palNote').textContent = pal.note;
-  try { localStorage.setItem('mmp-palette', key); } catch (er) {}
+  if (!key.startsWith('__')) { try { localStorage.setItem('mmp-palette', key); } catch (er) {} }
+  if (pal.custom) $('palNote').insertAdjacentHTML('beforeend', ' <button class="linkbtn pal-edit" id="palEdit">Edit this palette</button>');
   fitPainting(false);
   renderPalette(); renderIngredients(); renderSelects(); update(); renderString();
 }
@@ -2346,6 +2411,7 @@ const closePalMenu = () => { const m = $('palMenu'); if (m && !m.hidden) { m.hid
 $('palList').addEventListener('click', e => {
   if (e.target.closest('#palToggle')) { const m = $('palMenu'), open = m.hidden; m.hidden = !open; $('palToggle').setAttribute('aria-expanded', open);
     if (open) { const s = m.querySelector('[aria-selected="true"]'); if (s) { s.scrollIntoView({ block: 'nearest' }); s.focus({ preventScroll: true }); } } return; }
+  if (e.target.closest('[data-build]')) { closePalMenu(); BUILDER.open(); return; }
   const b = e.target.closest('[data-pal]'); if (!b) return;
   closePalMenu(); if (isPainting()) setTreeMode('palette'); if (b.dataset.pal !== state.palette) setPalette(b.dataset.pal); else renderPalLists();
   $('palToggle').focus({ preventScroll: true });
@@ -2377,6 +2443,182 @@ const mq = matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener && mq
 new MutationObserver(() => drawWheel()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 $('ogBlob').src = DAB.og;
+
+/* ---------- palette builder: choose from 30 common paints, set the order, see what the palette can reach ---------- */
+const BUILD_LIB = [
+  ['Whites & blacks', ['tw', 'ib']],
+  ['Yellows', ['hcl', 'cy', 'cym', 'hcd', 'yo', 'rs']],
+  ['Oranges & reds', ['co', 'hcr', 'vm', 'ac', 'mg', 'rm']],
+  ['Earths', ['lr', 'bs', 'ru', 'bu']],
+  ['Violets', ['cv', 'huv']],
+  ['Blues', ['um', 'cb', 'hpb', 'pb', 'mb', 'hpt']],
+  ['Greens', ['vg', 'hpg', 'eg', 'bgl']]
+];
+const BUILD_IDS = BUILD_LIB.flatMap(f => f[1]);
+const BUILD_STARTS = [
+  ['Empty', () => []],
+  ['Three primaries', () => ['tw', 'cy', 'hcr', 'um']],
+  ['Zorn', () => ['tw', 'yo', 'vm', 'ib']],
+  ['Earths + ultramarine', () => ['tw', 'yo', 'lr', 'bs', 'bu', 'um', 'ib']],
+  ['Michael Klein', () => PALETTES.klein.ids.slice()],
+  ['Current palette', () => (BUILDER.prev && PALETTES[BUILDER.prev] ? PALETTES[BUILDER.prev].ids.slice() : [])]
+];
+// any photo pile the palette already has for a paint, else the drawn one
+function anyDab(id) {
+  if (typeof PHOTO_DABS !== 'undefined' && PHOTO_DABS[id]) return PHOTO_DABS[id];
+  for (const k in PALETTES) { const d = PALETTES[k].dabs; if (d && d[id] && !PALETTES[k].custom) return d[id]; }
+  return GEN_DAB[id] || '';
+}
+const CUSTOM_KEY = 'mmp-custom';
+function loadCustom() { try { const a = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => x && x.k && Array.isArray(x.ids)) : []; } catch (e) { return []; } }
+function saveCustomList(list) { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+function registerCustom(c) {
+  const ids = c.ids.filter(id => PIG[id]);
+  PALETTES['u_' + c.k] = { group: 'custom', custom: true, k: c.k, name: c.name || 'My palette', dates: 'your palette', ids, white: 'titanium',
+    dabs: Object.fromEntries(ids.map(id => [id, anyDab(id)])), note: 'Your own palette, made with the palette builder and saved in this browser.' };
+}
+loadCustom().forEach(registerCustom);
+
+// what a set of paints can reach: singles, pairs at three ratios, each also with white; strongest chroma per hue family and the value range
+const REACH_RATIOS = [[8, 1], [3, 1], [1, 1], [1, 3], [1, 8]];
+const REACH_FAMS = ['R', 'YR', 'Y', 'GY', 'G', 'BG', 'B', 'PB', 'P', 'RP'];
+function reachOf(ids, base) {
+  const r = base ? { maxC: base.maxC.slice(), lo: base.lo, hi: base.hi } : { maxC: new Array(10).fill(0), lo: 10, hi: 0 };
+  const hasW = ids.includes('tw');
+  const take = q => { let a; try { a = analyze(mixR(q)); } catch (e) { return; }
+    if (a.V < r.lo) r.lo = a.V; if (a.V > r.hi) r.hi = a.V;
+    if (a.chroma >= 0.6) { const f = Math.floor(((a.hue % 100) + 100) % 100 / 10) % 10; if (a.chroma > r.maxC[f]) r.maxC[f] = a.chroma; } };
+  const withWhite = q => { take(q); if (hasW && !q.tw) { take({ ...q, tw: 1 }); take({ ...q, tw: 3 }); } };
+  return { r, take, withWhite };
+}
+function reachSet(ids) {
+  const { r, withWhite } = reachOf(ids), pig = ids.filter(id => id !== 'tw');
+  ids.forEach(id => withWhite({ [id]: 1 }));
+  for (let i = 0; i < pig.length; i++) for (let j = i + 1; j < pig.length; j++) REACH_RATIOS.forEach(([x, y]) => withWhite({ [pig[i]]: x, [pig[j]]: y }));
+  return r;
+}
+function reachAdd(cur, ids, cand) {
+  const all = ids.concat(cand), { r, withWhite } = reachOf(all, cur), pig = ids.filter(id => id !== 'tw');
+  withWhite({ [cand]: 1 });
+  if (cand !== 'tw') pig.forEach(id => REACH_RATIOS.forEach(([x, y]) => withWhite({ [cand]: x, [id]: y })));
+  else ids.forEach(id => { withWhite({ [id]: 1 }); });
+  return r;
+}
+let REACH_LIB = null;
+const reachLib = () => REACH_LIB || (REACH_LIB = reachSet(BUILD_IDS));
+
+const BUILDER = {
+  ids: [], name: '', editKey: null, prev: null, open(editKey) {
+    if (ANIM && ANIM.on) stopAnim();
+    if (isPainting()) setTreeMode('palette');
+    const editing = editKey && PALETTES['u_' + editKey];
+    this.prev = editing ? 'u_' + editKey : (state.palette.startsWith('__') ? this.prev : state.palette);
+    this.editKey = editing ? editKey : null;
+    this.ids = editing ? PALETTES['u_' + editKey].ids.slice() : [];
+    this.name = editing ? PALETTES['u_' + editKey].name : '';
+    $('bdName').value = this.name; $('bdDelete').hidden = !this.editKey; $('bdMsg').textContent = '';
+    $('builder').hidden = false; document.body.classList.add('building'); this.renderLib(); this.apply();
+    $('builder').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  },
+  close(restore = true) {
+    $('builder').hidden = true; document.body.classList.remove('building'); delete PALETTES.__draft;
+    if (restore) setPalette(this.prev && PALETTES[this.prev] ? this.prev : 'klein');
+  },
+  toggle(id) { const i = this.ids.indexOf(id); if (i >= 0) this.ids.splice(i, 1); else this.ids.push(id); this.apply(); },
+  move(i, d) { const j = i + d; if (j < 0 || j >= this.ids.length) return; [this.ids[i], this.ids[j]] = [this.ids[j], this.ids[i]]; this.apply(); },
+  // the page shows the draft palette as you build: the paint board, the mixer and the tree all follow it
+  apply() {
+    const ids = this.ids.filter(id => PIG[id]);
+    PALETTES.__draft = { group: 'draft', name: ($('bdName').value.trim() || 'New palette'), dates: 'draft', ids: ids.length ? ids : ['tw'], white: 'titanium',
+      dabs: Object.fromEntries(ids.map(id => [id, anyDab(id)])), note: 'Building a palette. The paint board, the mixer and the tree below show it as you go.' };
+    setPalette('__draft');
+    this.renderLib(); this.renderOrder(); this.renderReach();
+    $('bdShare').hidden = !shareBase();
+  },
+  renderLib() {
+    $('bdStarts').innerHTML = BUILD_STARTS.map(([n], i) => `<button class="btn" data-start="${i}">${n}</button>`).join('');
+    $('bdLib').innerHTML = BUILD_LIB.map(([fam, ids]) => `<div class="bd-fam"><h4>${fam}</h4><div class="bd-fam-row">${ids.map(id => {
+      const on = this.ids.includes(id), a = analyze(mixR({ [id]: 1 }));
+      return `<button class="bd-chip" data-id="${id}" aria-pressed="${on}" title="${PIG[id].name}, ${munsellText(a)}"><i style="background:${a.hex}"></i><span>${PIG[id].name}<small>${munsellText(a)}</small></span></button>`; }).join('')}</div></div>`).join('');
+  },
+  renderOrder() {
+    $('bdOrder').innerHTML = this.ids.filter(id => PIG[id]).map((id, i, arr) => `<div class="bd-item" draggable="true" data-i="${i}">
+      <button class="rm" data-rm="${id}" aria-label="Remove ${PIG[id].name}">×</button><img src="${anyDab(id)}" alt=""><span class="nm">${PIG[id].name}</span>
+      <span class="mv"><button data-mv="-1" aria-label="Move ${PIG[id].name} left" ${i ? '' : 'disabled'}>‹</button><button data-mv="1" aria-label="Move ${PIG[id].name} right" ${i < arr.length - 1 ? '' : 'disabled'}>›</button></span></div>`).join('');
+  },
+  renderReach() {
+    const ids = this.ids.filter(id => PIG[id]), box = $('bdReach');
+    if (!ids.length) { box.innerHTML = '<div class="bd-notes"><p>Add paints to see what your palette can reach: how strong each hue gets, how dark and light it goes, and which paint would fill its biggest gap.</p></div>'; return; }
+    const R = reachSet(ids), L = reachLib();
+    const bars = REACH_FAMS.map((f, i) => { const frac = L.maxC[i] ? Math.min(1, R.maxC[i] / L.maxC[i]) : 0;
+      const col = lab2hex(...munsellToLab(i * 10 + 5, 6, Math.max(2, Math.min(10, R.maxC[i] || 2))));
+      return `<div class="bd-bar" title="${f}: reaches chroma /${Math.round(R.maxC[i])} of a possible /${Math.round(L.maxC[i])} with these 30 paints"><div class="track"><div class="fill" style="height:${(frac * 100).toFixed(1)}%;background:${col}"></div></div><span>${f}</span></div>`; }).join('');
+    const weak = REACH_FAMS.map((f, i) => ({ f, i, frac: L.maxC[i] ? R.maxC[i] / L.maxC[i] : 1 })).sort((a, b) => a.frac - b.frac).filter(x => x.frac < 0.6).slice(0, 3);
+    const strong = REACH_FAMS.map((f, i) => ({ f, c: R.maxC[i] })).sort((a, b) => b.c - a.c).slice(0, 2);
+    // the paint from the 30 that adds the most reach
+    let best = null;
+    if (ids.length < 16) BUILD_IDS.filter(id => !ids.includes(id)).forEach(id => { const n = reachAdd(R, ids, id);
+      let gain = 0; for (let i = 0; i < 10; i++) if (L.maxC[i]) gain += Math.max(0, Math.min(n.maxC[i], L.maxC[i]) - R.maxC[i]) / L.maxC[i];
+      gain += Math.max(0, R.lo - n.lo) * 0.08 + Math.max(0, n.hi - R.hi) * 0.08;
+      if (!best || gain > best.gain) best = { id, gain, n }; });
+    const fmtV = v => (Math.round(v * 10) / 10).toFixed(1);
+    const famName = f => FAMNAMES[f] || f;
+    let notes = `<p>Values run from <b>${fmtV(R.lo)}</b> to <b>${fmtV(R.hi)}</b>${R.hi < 8.5 && !ids.includes('tw') ? ' (add a white to reach the lights)' : ''}${R.lo > 2.5 ? ', so the darks stay fairly light' : ''}.</p>`;
+    notes += `<p>Strongest in <b>${strong.map(s => s.f).join('</b> and <b>')}</b>, reaching chroma /${Math.round(strong[0].c)}.</p>`;
+    const none = weak.filter(w => R.maxC[w.i] < 0.6), low = weak.filter(w => R.maxC[w.i] >= 0.6);
+    if (none.length) notes += `<p>Doesn't reach ${none.map(w => `<b>${w.f}</b> ${famName(w.f).toLowerCase()}`).join(', ')} at all: mixes in those hues stay grey.</p>`;
+    if (low.length) notes += `<p>Weak in ${low.map(w => `<b>${w.f}</b> ${famName(w.f).toLowerCase()} (/${Math.round(R.maxC[w.i])} of a possible /${Math.round(L.maxC[w.i])})`).join(', ')}.</p>`;
+    if (!weak.length) notes += '<p>No big gaps: every hue reaches at least 60% of what the 30 paints can.</p>';
+    if (best && best.gain > 0.05) notes += `<div class="sug"><span>Biggest gain: <b>${PIG[best.id].name}</b></span><button class="btn" data-addsug="${best.id}">Add it</button></div>`;
+    box.innerHTML = `<div><h4>Strongest chroma in each hue</h4><div class="bd-bars">${bars}</div></div><div><h4>What this palette reaches</h4><div class="bd-notes">${notes}</div></div>`;
+  },
+  save() {
+    const ids = this.ids.filter(id => PIG[id]); if (!ids.length) { $('bdMsg').textContent = 'Add at least one paint first.'; return; }
+    const name = $('bdName').value.trim() || 'My palette', list = loadCustom();
+    const k = this.editKey || Date.now().toString(36), entry = { k, name, ids };
+    const i = list.findIndex(x => x.k === k); if (i >= 0) list[i] = entry; else list.push(entry);
+    const ok = saveCustomList(list); registerCustom(entry);
+    this.close(false); this.prev = 'u_' + k; setPalette('u_' + k);
+    $('palNote').insertAdjacentHTML('beforeend', ok ? '' : ' <span class="bd-msg">(This browser could not store it, so it will be gone after a reload.)</span>');
+  },
+  remove() {
+    if (!this.editKey) return; const nm = PALETTES['u_' + this.editKey] ? PALETTES['u_' + this.editKey].name : 'this palette';
+    if (!confirm(`Delete “${nm}”?`)) return;
+    saveCustomList(loadCustom().filter(x => x.k !== this.editKey)); delete PALETTES['u_' + this.editKey];
+    this.editKey = null; this.prev = 'klein'; this.close(true);
+  }
+};
+// a link that opens the palette builder with this palette in it (only where the page has its own web address)
+function shareBase() { const h = location.host || ''; return /^https?:$/.test(location.protocol) && !/claude|anthropic/.test(h) ? location.origin + location.pathname : ''; }
+(function initBuilder() {
+  $('bdLib').addEventListener('click', e => { const c = e.target.closest('.bd-chip'); if (c) BUILDER.toggle(c.dataset.id); });
+  $('bdStarts').addEventListener('click', e => { const b = e.target.closest('[data-start]'); if (!b) return; BUILDER.ids = BUILD_STARTS[+b.dataset.start][1]().filter(id => PIG[id]);
+    if (!$('bdName').value.trim() && +b.dataset.start > 0) { const n = BUILD_STARTS[+b.dataset.start][0]; $('bdName').value = /^(Zorn|Michael Klein)$/.test(n) ? n + ' palette' : 'My ' + n.toLowerCase() + ' palette'; } BUILDER.apply(); });
+  $('bdOrder').addEventListener('click', e => { const it = e.target.closest('.bd-item'); if (!it) return; const i = +it.dataset.i;
+    const rm = e.target.closest('[data-rm]'); if (rm) { BUILDER.toggle(rm.dataset.rm); return; }
+    const mv = e.target.closest('[data-mv]'); if (mv) BUILDER.move(i, +mv.dataset.mv); });
+  let dragI = -1;
+  $('bdOrder').addEventListener('dragstart', e => { const it = e.target.closest('.bd-item'); if (!it) return; dragI = +it.dataset.i; it.classList.add('dragging'); try { e.dataTransfer.setData('text/plain', String(dragI)); e.dataTransfer.effectAllowed = 'move'; } catch (er) {} });
+  $('bdOrder').addEventListener('dragover', e => { const it = e.target.closest('.bd-item'); if (!it || dragI < 0) return; e.preventDefault(); document.querySelectorAll('.bd-item.over').forEach(x => x.classList.remove('over')); it.classList.add('over'); });
+  $('bdOrder').addEventListener('drop', e => { const it = e.target.closest('.bd-item'); if (!it || dragI < 0) return; e.preventDefault();
+    const to = +it.dataset.i, ids = BUILDER.ids.filter(id => PIG[id]), [m] = ids.splice(dragI, 1); ids.splice(to, 0, m); BUILDER.ids = ids; dragI = -1; BUILDER.apply(); });
+  $('bdOrder').addEventListener('dragend', () => { dragI = -1; document.querySelectorAll('.bd-item').forEach(x => x.classList.remove('dragging', 'over')); });
+  $('bdReach').addEventListener('click', e => { const b = e.target.closest('[data-addsug]'); if (b) BUILDER.toggle(b.dataset.addsug); });
+  let nt = 0; $('bdName').addEventListener('input', () => { clearTimeout(nt); nt = setTimeout(() => { if (PALETTES.__draft) { PALETTES.__draft.name = $('bdName').value.trim() || 'New palette'; renderPalLists(); } }, 250); });
+  $('bdSave').addEventListener('click', () => BUILDER.save());
+  $('bdDelete').addEventListener('click', () => BUILDER.remove());
+  $('bdClose').addEventListener('click', () => BUILDER.close(true));
+  $('bdShare').addEventListener('click', async () => {
+    const ids = BUILDER.ids.filter(id => PIG[id]); if (!ids.length) return;
+    const url = shareBase() + '#palette=' + encodeURIComponent(($('bdName').value.trim() || 'My palette').slice(0, 40)) + ':' + ids.join(',');
+    try { await navigator.clipboard.writeText(url); $('bdMsg').textContent = 'Link copied. Anyone who opens it can save this palette as their own.'; }
+    catch (e) { $('bdMsg').textContent = url; } });
+  document.addEventListener('click', e => { if (e.target.closest('#palEdit')) { const P = curPal(); if (P.custom) BUILDER.open(P.k); } });
+  // opening a shared palette link puts that palette in the builder, ready to save
+  const m = (location.hash || '').match(/^#palette=([^:]*):([a-z0-9,]+)$/i);
+  if (m) setTimeout(() => { BUILDER.open(); BUILDER.ids = m[2].split(',').filter(id => PIG[id]); $('bdName').value = decodeURIComponent(m[1]).slice(0, 40); BUILDER.apply();
+    $('bdMsg').textContent = 'A shared palette. Save it to keep it in your palettes.'; }, 300);
+})();
 (() => { let k = 'klein'; try { const s = localStorage.getItem('mmp-palette'); if (s && PALETTES[s]) k = s; } catch (er) {} setPalette(k); })();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawWheel());
 
