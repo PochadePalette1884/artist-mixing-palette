@@ -652,11 +652,15 @@ html,body{overflow-x:clip} body{margin:0}
     </div>
   </section>
 
-  <section class="card studio" id="studioCard" aria-label="Artist's Mixing Palette Studio" hidden>
-    <div class="card-head"><h2>Artist’s Mixing Palette Studio</h2><span class="label" id="stLabel">Members</span></div>
-    <div id="stOut"><p class="st-pitch">A free account opens the palette builder and the Studio video library, where Michael shows how he uses this palette in his own painting.</p>
+  <section class="card studio" id="studioCard" aria-label="AMP Studio" hidden>
+    <div class="card-head"><h2>AMP Studio</h2><span class="label" id="stLabel">Members</span></div>
+    <div id="stOut" class="st-out"><p class="st-pitch">A free account opens the palette builder and the AMP Studio video library, where Michael shows how he uses this palette in his own painting.</p>
       <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button></div></div>
-    <div id="stIn" hidden><div class="st-player" id="stPlayer" hidden></div><div class="st-list" id="stList"></div></div>
+    <div id="stIn" class="st-in" hidden>
+      <button class="st-arr" type="button" data-scroll="-1" aria-label="Earlier videos" hidden>‹</button>
+      <div class="st-row" id="stList" tabindex="0" aria-label="Studio videos"></div>
+      <button class="st-arr" type="button" data-scroll="1" aria-label="More videos" hidden>›</button>
+    </div>
   </section>
 
   <section class="card" id="bookCard" aria-label="Munsell Book">
@@ -701,6 +705,12 @@ html,body{overflow-x:clip} body{margin:0}
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
 
+<dialog class="st-lb" id="stLb" aria-labelledby="stLbTitle">
+  <div class="st-lb-head"><h2 id="stLbTitle"></h2><button class="x" type="button" id="stLbClose" aria-label="Close video">×</button></div>
+  <div class="st-player" id="stPlayer"></div>
+  <p class="st-lb-desc" id="stLbDesc"></p>
+</dialog>
+
 <dialog class="auth" id="authDlg" aria-labelledby="authTitle">
   <form id="authForm" novalidate>
     <button class="x auth-x" type="button" id="authClose" aria-label="Close">×</button>
@@ -722,17 +732,33 @@ html,body{overflow-x:clip} body{margin:0}
 .acct-menu button{all:unset; cursor:pointer; padding:8px 10px; border-radius:8px; font-size:.88rem; color:var(--ink)}
 .acct-menu button:hover, .acct-menu button:focus-visible{background:rgba(255,255,255,.07)}
 .acct-who{padding:6px 10px 8px; font-size:.78rem; color:var(--muted); border-bottom:1px solid var(--line); margin-bottom:4px; overflow-wrap:anywhere}
-.studio .st-pitch{margin:0; max-width:60ch; color:var(--muted)}
-.st-acts{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.studio .st-pitch{margin:0; max-width:62ch; color:var(--muted)}
+.st-out{display:flex; justify-content:space-between; align-items:center; gap:14px 24px; flex-wrap:wrap}
+.st-acts{display:flex; gap:14px; align-items:center; flex-wrap:wrap}
+.st-in{position:relative; display:flex; align-items:center; gap:8px; min-width:0}
+.st-row{flex:1; min-width:0; display:flex; gap:14px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth; padding:2px 2px 8px; scrollbar-width:thin; scrollbar-color:var(--line) transparent}
+.st-row:focus-visible{outline:2px solid var(--ink); outline-offset:4px; border-radius:12px}
+.st-arr{flex:none; width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--panel-2); color:var(--ink); font-size:1.3rem; line-height:1; cursor:pointer; display:grid; place-items:center; padding:0 0 3px}
+.st-arr:hover{border-color:var(--ink)}
+.st-arr[hidden]{display:none}
 .st-btn{font:600 .9rem var(--body); color:#2a261f; background:var(--ink); border:0; border-radius:999px; padding:10px 20px; cursor:pointer}
 .st-btn:disabled{opacity:.6; cursor:default}
 .st-link{all:unset; cursor:pointer; font-size:.88rem; color:var(--ink); text-decoration:underline; text-underline-offset:3px}
-.st-list{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px}
-.st-vid{all:unset; cursor:pointer; display:flex; flex-direction:column; gap:4px; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--panel-2)}
-.st-vid:hover, .st-vid:focus-visible, .st-vid[aria-current="true"]{border-color:var(--ink)}
-.st-vid b{font-family:var(--display); font-size:1.15rem; font-weight:600; line-height:1.15}
-.st-vid span{font-size:.84rem; color:var(--muted)}
-.st-player{position:relative; width:100%; max-width:960px; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000}
+.st-vid{all:unset; box-sizing:border-box; flex:0 0 clamp(210px, 24vw, 270px); scroll-snap-align:start; cursor:pointer; display:flex; flex-direction:column; gap:7px}
+.st-th{position:relative; aspect-ratio:16/9; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:var(--panel-2) center/cover no-repeat}
+.st-th img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.st-th::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(20,18,15,.6) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 7l9 5-9 5z' fill='%23ebe3cf'/%3E%3C/svg%3E") center/22px no-repeat; transition:transform .15s}
+.st-vid:hover .st-th, .st-vid:focus-visible .st-th{border-color:var(--ink)}
+.st-vid:hover .st-th::after{transform:scale(1.08)}
+.st-vid b{font-family:var(--display); font-size:1.08rem; font-weight:600; line-height:1.15}
+.st-vid span{font-size:.8rem; color:var(--muted); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.st-lb{border:1px solid var(--line); border-radius:16px; background:var(--panel); color:var(--ink); padding:18px; width:min(1100px, calc(100vw - 32px))}
+.st-lb::backdrop{background:rgba(0,0,0,.72)}
+.st-lb-head{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.st-lb-head h2{font-size:1.5rem}
+.st-lb-desc{margin:12px 0 0; color:var(--muted); font-size:.9rem}
+.st-lb-desc:empty{display:none}
+.st-player{position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000}
 .st-player iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
 .st-empty{margin:0; color:var(--muted)}
 .auth{border:1px solid var(--line); border-radius:16px; background:var(--panel); color:var(--ink); padding:0; width:min(400px, calc(100vw - 32px))}
@@ -749,7 +775,7 @@ html,body{overflow-x:clip} body{margin:0}
 .auth-go{align-self:stretch; margin-top:4px}
 .auth-alt{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:.86rem}
 .pal-build .lock{opacity:.7; font-size:.8em; margin-left:6px}
-@media (max-width:700px){ .acct{top:12px} }
+@media (max-width:700px){ .acct{top:12px} .st-arr{display:none !important} .st-vid{flex-basis:78%} }
 </style>
 
 <style id="brush-css">
@@ -1191,7 +1217,7 @@ const STUDIO = {
     $('acctWho').textContent = u ? u.email : '';
     $('stOut').hidden = !!u; $('stIn').hidden = !u;
     $('stLabel').textContent = u ? 'Video library' : 'Members';
-    if (!u) { $('acctMenu').hidden = true; $('stPlayer').hidden = true; $('stPlayer').innerHTML = ''; this.vids = null; }
+    if (!u) { $('acctMenu').hidden = true; if ($('stLb').open) $('stLb').close(); this.vids = null; }
     if (u && was !== now) this.loadVideos();
     try { renderPalLists(); } catch (e) {}
     if (u && this.after) { const f = this.after; this.after = null; if ($('authDlg').open) $('authDlg').close(); setTimeout(f, 50); }
@@ -1251,12 +1277,22 @@ const STUDIO = {
   async loadVideos() {
     const L = $('stList'); L.innerHTML = '<p class="st-empty">Loading videos…</p>';
     let rows = [];
-    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url').order('sort', { ascending: true }); if (!error && data) rows = data; } catch (e) {}
+    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url,thumb').order('sort', { ascending: true }); if (!error && data) rows = data; } catch (e) {}
     this.vids = rows;
     const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-    L.innerHTML = rows.length ? rows.map((v, i) => `<button class="st-vid" type="button" data-vid="${i}"><b>${esc(v.title)}</b>${v.description ? `<span>${esc(v.description)}</span>` : ''}</button>`).join('')
+    const tint = i => { const h = [32, 205, 8, 140, 265, 48, 180, 330][i % 8]; return `linear-gradient(135deg, hsl(${h} 32% 42%), hsl(${(h + 25) % 360} 22% 24%))`; };
+    L.innerHTML = rows.length ? rows.map((v, i) => { const t = this.thumb(v);
+      return `<button class="st-vid" type="button" data-vid="${i}"><div class="st-th" style="background-image:${tint(i)}">${t ? `<img src="${esc(t)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div><b>${esc(v.title)}</b>${v.description ? `<span>${esc(v.description)}</span>` : ''}</button>`; }).join('')
       : '<p class="st-empty">The first Studio videos are on the way. They’ll appear here as soon as they’re posted.</p>';
+    L.scrollLeft = 0; this.arrows();
   },
+  thumb(v) {
+    if (v.thumb) return v.thumb;
+    const m = String(v.url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/);
+    return m ? 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg' : '';
+  },
+  arrows() { const L = $('stList'), over = L.scrollWidth > L.clientWidth + 4;
+    document.querySelectorAll('.st-arr').forEach(b => { b.hidden = !over; b.disabled = +b.dataset.scroll < 0 ? L.scrollLeft < 4 : L.scrollLeft + L.clientWidth > L.scrollWidth - 4; b.style.opacity = b.disabled ? .35 : 1; }); },
   embed(url) {
     let m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/);
     if (m) return 'https://www.youtube-nocookie.com/embed/' + m[1] + '?rel=0&autoplay=1';
@@ -1268,10 +1304,9 @@ const STUDIO = {
     const v = this.vids && this.vids[i]; if (!v) return;
     const src = this.embed(v.url);
     if (!src) { window.open(v.url, '_blank', 'noopener'); return; }
-    const P = $('stPlayer'); P.hidden = false;
-    P.innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Studio video"></iframe>`;
-    document.querySelectorAll('.st-vid').forEach(b => b.setAttribute('aria-current', b.dataset.vid == i ? 'true' : 'false'));
-    P.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    $('stLbTitle').textContent = v.title || ''; $('stLbDesc').textContent = v.description || '';
+    $('stPlayer').innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${String(v.title || 'Studio video').replace(/"/g, '&quot;')}"></iframe>`;
+    $('stLb').showModal();
   },
   wire() {
     $('acctBtn').addEventListener('click', e => { e.stopPropagation(); if (this.user) $('acctMenu').hidden = !$('acctMenu').hidden; else this.open('in', ''); });
@@ -1282,6 +1317,11 @@ const STUDIO = {
       if (e.target.closest('[data-go-studio]')) { $('acctMenu').hidden = true; $('studioCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
       const v = e.target.closest('[data-vid]'); if (v) this.play(+v.dataset.vid);
     });
+    const L = $('stList'); L.addEventListener('scroll', () => this.arrows(), { passive: true }); addEventListener('resize', () => this.arrows());
+    document.addEventListener('click', e => { const a = e.target.closest('[data-scroll]'); if (a) L.scrollBy({ left: +a.dataset.scroll * L.clientWidth * .85 }); });
+    const shut = () => { $('stPlayer').innerHTML = ''; };
+    $('stLbClose').addEventListener('click', () => $('stLb').close()); $('stLb').addEventListener('close', shut);
+    $('stLb').addEventListener('click', e => { if (e.target === $('stLb')) $('stLb').close(); });
     $('authForm').addEventListener('submit', e => { e.preventDefault(); this.submit(); });
     $('authClose').addEventListener('click', () => { this.after = null; $('authDlg').close(); });
     $('authDlg').addEventListener('cancel', () => { this.after = null; });
