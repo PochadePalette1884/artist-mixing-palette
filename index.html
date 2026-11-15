@@ -577,7 +577,7 @@ html,body{overflow-x:clip} body{margin:0}
               <div class="pk-btns"><button class="x pk-grow" id="pkGrow" aria-label="Enlarge the painting" aria-pressed="false" title="Enlarge the painting" hidden><svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7.5 1.5h4v4M11.5 1.5 7 6M5.5 11.5h-4v-4M1.5 11.5 6 7"/></svg></button><button class="x" id="pkClose" aria-label="Close picked color">×</button></div>
             </div>
             <ul class="pk-recipe" id="pkRecipe"></ul>
-            <div class="pk-acts"><button class="btn primary" id="pkLoad">Load into The mix</button><button class="btn" id="pkComp" aria-pressed="false">View complement path</button></div>
+            <div class="pk-acts"><button class="btn primary" id="pkLoad">Load into The mix</button><button class="btn" id="pkComp" aria-pressed="false">View complement path</button><button class="btn" id="pkBrush" hidden>Brush an area</button></div>
             <p class="pk-compmsg" id="pkCompMsg" hidden></p>
           </div>
         </div>
@@ -2003,7 +2003,7 @@ function pickAt(x, y) {
 function showPick(pk, msg) {
   const box = $('picked');
   if (COMPPATH && COMPPATH.pick && COMPPATH.pick !== pk) clearPickComp(); else if (!COMPPATH || !COMPPATH.pick) resetPickCompUI();
-  $('pkComp').hidden = !pk;
+  $('pkComp').hidden = !pk; $('pkBrush').hidden = !(pk && pk.px);
   if (!pk) { if (msg) { box.hidden = false; $('pkBody').hidden = true; $('pkMsg').hidden = false; $('pkMsg').textContent = msg; } else box.hidden = true; return; }
   box.hidden = false; $('pkBody').hidden = false; $('pkMsg').hidden = true;
   $('picked').classList.toggle('has-px', !!pk.px); $('pkWhere').hidden = !pk.px;
@@ -3169,6 +3169,7 @@ function brushSummary(pts) {
   $('brNew').addEventListener('click', () => { BRUSH.add = false; $('brNew').setAttribute('aria-pressed', 'true'); $('brAdd').setAttribute('aria-pressed', 'false'); });
   $('brAdd').addEventListener('click', () => { BRUSH.add = true; $('brNew').setAttribute('aria-pressed', 'false'); $('brAdd').setAttribute('aria-pressed', 'true'); });
   $('brAll').addEventListener('click', brushWhole);
+  $('pkBrush').addEventListener('click', brushOpen);
   $('brClose').addEventListener('click', () => { $('brushBox').hidden = true; $('ptBrush').textContent = 'Brush an area'; });
   $('ptBrush').addEventListener('click', () => { if (!$('brushBox').hidden) { $('brushBox').hidden = true; $('ptBrush').textContent = 'Brush an area'; } else brushOpen(); });
   $('brInfo').addEventListener('click', e => {
