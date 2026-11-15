@@ -585,8 +585,8 @@ html,body{overflow-x:clip} body{margin:0}
         </div>
       </div>
       </div>
-      <p class="tree-hint" id="insideHint">Tap any chip to see where it is in the painting and its closest mix. Drag to look around. Zoom with the mouse wheel or a pinch.</p>
-      <p class="tree-hint" id="treeHint"><span id="hintLead">Tap any color on the tree to see its mix.</span> Drag to turn. Zoom with the mouse wheel, + and −, or a pinch, and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</p>
+      <p class="tree-hint" id="insideHint">Tap any chip to see where it is in the painting and its closest mix. Drag to look around. Zoom with a pinch or Ctrl + scroll, or with the mouse wheel in full view.</p>
+      <p class="tree-hint" id="treeHint"><span id="hintLead">Tap any color on the tree to see its mix.</span> Drag to turn. Zoom with + and −, a pinch, or Ctrl + scroll (the mouse wheel zooms in full view), and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</p>
       <div class="tree-mode">
         <span class="label">Add a painting</span>
         <div class="pt-bar" id="ptBar">
@@ -2366,6 +2366,8 @@ function setSpin(on) { if (on && ANIM.on) stopAnim(); VIEW.spin = on; $('spinBtn
   cv.addEventListener('contextmenu', e => { if (VIEW.zoom > 1) e.preventDefault(); });
   // mouse wheel zooms toward the cursor; a trackpad pinch arrives as Ctrl + wheel with small steps
   cv.addEventListener('wheel', e => {
+    // on the main page the wheel scrolls the page; it zooms only in full view, or with Ctrl/⌘ or a trackpad pinch
+    if (!cv.closest('.card.full') && !e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
     const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
     const k = (e.ctrlKey || e.metaKey) ? 0.01 : 0.0022;
@@ -3320,7 +3322,7 @@ void main(){
     else if (pts.size === 2) { const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch > 0) cam.dist = Math.max(2.5, Math.min(55, cam.dist * pinch / d)); pinch = d; } });
   cv.addEventListener('pointerup', e => { if (pts.size === 1 && moved <= 6) pick(e.clientX, e.clientY); pts.delete(e.pointerId); if (!pts.size) cv.classList.remove('drag'); });
   cv.addEventListener('pointercancel', e => { pts.delete(e.pointerId); cv.classList.remove('drag'); });
-  cv.addEventListener('wheel', e => { e.preventDefault(); stopDrone(); cam.dist = Math.max(2.5, Math.min(55, cam.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+  cv.addEventListener('wheel', e => { if (!cv.closest('.card.full') && !e.ctrlKey && !e.metaKey) return; e.preventDefault(); stopDrone(); cam.dist = Math.max(2.5, Math.min(55, cam.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
   // a tap picks the nearest chip under it and hands it to the same window the tree uses
   function pick(cx, cy) { const rc = cv.getBoundingClientRect(), b = basis(), x = ((cx - rc.left) / rc.width * 2 - 1) * b.tx, y = (1 - (cy - rc.top) / rc.height * 2) * b.ty;
     const d = norm([b.f[0] + x*b.r[0] + y*b.u[0], b.f[1] + x*b.r[1] + y*b.u[1], b.f[2] + x*b.r[2] + y*b.u[2]]), slack = matchMedia('(pointer: coarse)').matches ? 2.2 : 1; let best = null, bt = 1e9;
