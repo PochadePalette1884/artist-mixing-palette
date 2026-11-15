@@ -1183,7 +1183,7 @@ const $ = id => document.getElementById(id);
 // Runs only on the public site; inside claude.ai previews everything stays open.
 const SB_URL = 'https://kuwtznrchpybueorrjqp.supabase.co';
 const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
-const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';
 const STUDIO = {
   on: false, sb: null, user: null, after: null, mode: 'in', vids: null, checked: false, why: '',
   allow(fn, why) { if (!this.on || this.user) return true; this.after = fn; this.why = why;
@@ -1276,8 +1276,10 @@ const STUDIO = {
   },
   async loadVideos() {
     const L = $('stList'); L.innerHTML = '<p class="st-empty">Loading videos…</p>';
-    let rows = [];
-    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url,thumb').order('sort', { ascending: true }); if (!error && data) rows = data; } catch (e) {}
+    let rows = [], err = '';
+    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url,thumb').order('sort', { ascending: true });
+      if (error) err = error.message || String(error); else rows = data || []; } catch (e) { err = String(e && e.message || e); }
+    if (err) { console.warn('AMP Studio videos:', err); L.innerHTML = '<p class="st-empty">The videos couldn’t load just now. Please refresh in a moment.</p><p class="st-empty" style="font-size:.75rem;opacity:.7">' + err.replace(/[<>&]/g, '') + '</p>'; this.vids = []; this.arrows(); return; }
     this.vids = rows;
     const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const tint = i => { const h = [32, 205, 8, 140, 265, 48, 180, 330][i % 8]; return `linear-gradient(135deg, hsl(${h} 32% 42%), hsl(${(h + 25) % 360} 22% 24%))`; };
