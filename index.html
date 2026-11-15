@@ -652,6 +652,13 @@ html,body{overflow-x:clip} body{margin:0}
     </div>
   </section>
 
+  <section class="card studio" id="studioCard" aria-label="Artist's Mixing Palette Studio" hidden>
+    <div class="card-head"><h2>Artist’s Mixing Palette Studio</h2><span class="label" id="stLabel">Members</span></div>
+    <div id="stOut"><p class="st-pitch">A free account opens the palette builder and the Studio video library, where Michael shows how he uses this palette in his own painting.</p>
+      <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button></div></div>
+    <div id="stIn" hidden><div class="st-player" id="stPlayer" hidden></div><div class="st-list" id="stList"></div></div>
+  </section>
+
   <section class="card" id="bookCard" aria-label="Munsell Book">
     <div class="card-head"><h2>Munsell Book</h2><div style="display:flex;align-items:center;gap:12px"><span class="label">40 hue pages · value up · chroma out</span>
       <button class="fsbtn" id="bkFs" aria-label="Open the book full screen" title="Open the book full screen"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path id="bkFsIcon" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
@@ -690,12 +697,6 @@ html,body{overflow-x:clip} body{margin:0}
   </section>
 
 
-  <section class="card studio" id="studioCard" aria-label="Artist's Mixing Palette Studio" hidden>
-    <div class="card-head"><h2>Artist’s Mixing Palette Studio</h2><span class="label" id="stLabel">Members</span></div>
-    <div id="stOut"><p class="st-pitch">A free account opens the palette builder and the Studio video library, where Michael shows how he uses this palette in his own painting.</p>
-      <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button></div></div>
-    <div id="stIn" hidden><div class="st-player" id="stPlayer" hidden></div><div class="st-list" id="stList"></div></div>
-  </section>
 
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
