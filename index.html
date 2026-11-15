@@ -550,6 +550,18 @@ html,body{overflow-x:clip} body{margin:0}
     <section class="card" id="treeCard" aria-label="Munsell tree">
       <div class="card-head"><h2>Where it sits</h2><div style="display:flex;align-items:center;gap:12px"><span class="label">Value up · hue around · chroma out</span>
         <button class="fsbtn" id="fsBtn" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path id="fsIcon" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
+      <div class="brush" id="brushBox" hidden>
+        <div class="br-stage"><div class="br-frame" id="brFrame"><img id="brImg" alt="Your painting. Brush over an area to see only its colors on the tree."><canvas id="brCv" aria-hidden="true"></canvas></div></div>
+        <div class="br-side">
+          <div class="br-head"><span class="label">Brush an area</span><button class="x" id="brClose" aria-label="Close the brush" title="Close the brush (the area stays on the tree)">×</button></div>
+          <div class="br-tools">
+            <label class="br-size">Brush <input type="range" id="brSize" min="6" max="90" value="28" aria-label="Brush size"><i id="brDot"></i></label>
+            <span class="srcsw" role="group" aria-label="Each new stroke"><button id="brNew" aria-pressed="true" title="Each stroke shows a new area">New area</button><button id="brAdd" aria-pressed="false" title="Each stroke adds to the area">Add to area</button></span>
+            <button class="linkbtn" id="brAll">Whole painting</button>
+          </div>
+          <div class="br-info" id="brInfo"><p class="hint">Brush over part of the painting. When you let go, the tree shows only the colors under your stroke, with the mix and paints for that area.</p></div>
+        </div>
+      </div>
       <div class="tree-wrap">
         <canvas id="wheel" role="img" aria-label="Rotating 3D Munsell tree showing the pigments, the reachable mixtures and the current mix"></canvas>
         <canvas id="inside" role="img" aria-label="The painting wrapped around the horizon, with its colors as a cloud of chips in the middle"></canvas>
@@ -578,7 +590,7 @@ html,body{overflow-x:clip} body{margin:0}
         <div class="pt-bar" id="ptBar">
           <img id="ptThumb" alt="Your painting" hidden>
           <div class="pt-info"><span id="ptStats" class="pt-stats">Add a photo of a painting to see its colors as a tree. Each painting you add is kept in your Collection below, private to you.</span>
-            <div class="pt-btns"><label class="linkbtn" for="ptFile" id="ptChoose">Choose painting</label><input type="file" id="ptFile" accept="image/*" hidden><button class="linkbtn" id="ptView" hidden>Show on the tree</button></div>
+            <div class="pt-btns"><label class="linkbtn" for="ptFile" id="ptChoose">Choose painting</label><input type="file" id="ptFile" accept="image/*" hidden><button class="linkbtn" id="ptView" hidden>Show on the tree</button><button class="linkbtn" id="ptBrush" hidden>Brush an area</button></div>
 </div>
         </div>
         <div class="coll" id="coll" hidden>
@@ -679,6 +691,40 @@ html,body{overflow-x:clip} body{margin:0}
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
 
+<style id="brush-css">
+.brush{display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(260px, 1fr); gap:16px 20px; background:var(--panel-2); border-radius:14px; padding:14px; align-items:start}
+.br-stage{display:flex; justify-content:center; min-width:0}
+.br-frame{position:relative; display:inline-block; max-width:100%; line-height:0; touch-action:none; cursor:none; border-radius:6px; overflow:hidden}
+.br-frame img{display:block; max-width:100%; max-height:min(62vh, 560px); width:auto; height:auto; user-select:none; -webkit-user-drag:none}
+.br-frame canvas{position:absolute; inset:0; width:100%; height:100%}
+.br-side{display:flex; flex-direction:column; gap:12px; min-width:0}
+.br-head{display:flex; justify-content:space-between; align-items:center}
+.br-tools{display:flex; gap:10px 14px; flex-wrap:wrap; align-items:center}
+.br-size{display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--muted)}
+.br-size input{width:120px}
+.br-size i{display:inline-block; border-radius:50%; border:1.5px solid var(--ink); flex:none}
+.br-info{display:flex; flex-direction:column; gap:10px; font-size:.86rem}
+.br-info .hint{margin:0}
+.br-avg{display:flex; gap:12px; align-items:center}
+.br-avg .sw{width:58px; height:58px; border-radius:8px; flex:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.br-avg .nt{font-family:var(--mono); font-size:1.15rem; color:var(--ink)}
+.br-avg .ds{font-size:.78rem; color:var(--muted)}
+.br-rec{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:3px; font-size:.82rem}
+.br-rec li{display:flex; align-items:center; gap:7px}
+.br-rec .chip{width:12px; height:12px; border-radius:50%; flex:none}
+.br-rec .mono{margin-left:auto; color:var(--muted)}
+.br-main{display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px}
+.br-col{display:flex; flex-direction:column; gap:4px; border:1px solid var(--line); background:var(--panel); border-radius:10px; padding:6px; cursor:pointer; text-align:left; color:var(--ink); font:inherit}
+.br-col:hover{border-color:var(--ink)}
+.br-col .sw{height:30px; border-radius:6px}
+.br-col b{font-family:var(--mono); font-size:.72rem; font-weight:500}
+.br-col span{font-size:.66rem; color:var(--muted); line-height:1.25}
+.br-need{font-size:.82rem; line-height:1.5}
+.br-need b{font-weight:600}
+.br-sub{font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:2px 0 -4px}
+@media (max-width:900px){ .brush{grid-template-columns:1fr} }
+#treeCard:not(.full) .brush{order:-1}
+</style>
 <style id="builder-css">
 .builder{gap:14px}
 .bd-head-r{display:flex; align-items:center; gap:12px}
@@ -1368,6 +1414,7 @@ function buildPainting(im) {
   const pick = count => { const out = []; const step = n / count; for (let k = 0; k < count && k < n; k++) { const i = Math.min(n - 1, Math.floor(k * step + rnd() * step)), o = i * 4;
     const rgb = [d[o], d[o + 1], d[o + 2]], m = munsellOfRgb(rgb); out.push({ p: pt3(m), hex: m.hex, rgb, x: (i % w + 0.5) / w, y: (Math.floor(i / w) + 0.5) / h, m, raw: m }); } return out; };
   PT.base = pick(Math.min(6000, n)); PT.dense = pick(Math.min(30000, n)); PT.key = 'pt' + Date.now(); PT.im = im;
+  if (typeof brushReset === 'function') brushReset();
   const tc = document.createElement('canvas'), ts = Math.min(1, 360 / Math.max(w, h)); tc.width = Math.round(w * ts); tc.height = Math.round(h * ts); tc.getContext('2d').drawImage(im, 0, 0, tc.width, tc.height);
   PT.thumb = tc.toDataURL('image/jpeg', 0.85); PT.w = w; PT.h = h;
   const bc = document.createElement('canvas'), bs = Math.min(1, 1400 / Math.max(im.naturalWidth, im.naturalHeight)); bc.width = Math.round(im.naturalWidth * bs); bc.height = Math.round(im.naturalHeight * bs); bc.getContext('2d').drawImage(im, 0, 0, bc.width, bc.height);
@@ -2360,12 +2407,14 @@ function renderPalLists() {
       <span class="pc-text"><span class="pc-name">${cur.name}</span>${cur.dates ? `<span class="pc-dates">${cur.dates}</span>` : ''}<span class="pc-caret">${Object.keys(PALETTES).filter(k => !k.startsWith('__')).length} palettes ▾</span></span></button>
     <div class="pal-menu" id="palMenu" role="listbox" aria-label="Choose a palette"${open ? '' : ' hidden'}>${groups}</div>`;
   // the painting bar: switch the tree between the painting and the selected palette
+  const bb = $('ptBrush'); if (bb) bb.hidden = !PT.thumb;
   const v = $('ptView'); if (v) { v.hidden = !PT.thumb; v.textContent = state.tree === 'painting' ? 'Show palette' : 'Show painting'; }
 }
 function setTreeMode(m) {
   if (ANIM.on) stopAnim();
   if (m !== 'painting' && window.INSIDE_VIEW) window.INSIDE_VIEW.exit();
   state.tree = m; document.body.classList.toggle('mode-painting', m === 'painting');
+  if (m !== 'painting' && $('brushBox')) { $('brushBox').hidden = true; if ($('ptBrush')) $('ptBrush').textContent = 'Brush an area'; }
   renderPalLists(); $('ptNote').hidden = m !== 'painting';
   $('cloudLab').textContent = m === 'painting' ? 'Painting colors' : 'Reachable colors';
   $('hintLead').textContent = m === 'painting' ? 'Tap any color on the tree to see where it is in the painting.' : 'Tap any color on the tree to see its mix.';
@@ -3032,6 +3081,104 @@ void main(){
     if (!best) { PICK.cur = null; showPick(null, 'Nothing there. Tap on a colored chip.'); return; }
     PICK.cur = { a: best.m, p: best.p, px: best }; showPick(PICK.cur);
   }
+})();
+
+/* ---------- brush an area of the painting: the tree shows only the colors under the stroke ---------- */
+const BRUSH = { stamps: [], stroke: [], add: false, down: false, n: 0, full: null, baseKey: '', MW: 240, MH: 240, last: null };
+function brushReset() { BRUSH.stamps = []; BRUSH.stroke = []; BRUSH.full = null; BRUSH.baseKey = PT.key; $('brushBox').hidden = true; $('ptBrush').textContent = 'Brush an area'; }
+function brushSize() { const v = +$('brSize').value; const d = $('brDot'); d.style.width = d.style.height = Math.max(6, Math.min(34, v * 0.5)) + 'px'; return v; }
+function brushOpen() {
+  if (!PT.dense.length) return;
+  if (!isPainting()) setTreeMode('painting');
+  if (window.INSIDE_VIEW && document.body.classList.contains('mode-inside')) window.INSIDE_VIEW.exit();
+  if (!BRUSH.full) BRUSH.baseKey = PT.key;
+  $('brImg').src = PT.big || PT.thumb; $('brushBox').hidden = false; $('ptBrush').textContent = 'Hide the brush';
+  PICK.cur = null; showPick(null); brushSize();
+  $('brImg').onload = () => brushDraw(); brushDraw();
+  $('brushBox').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+}
+function brushCanvas() { const cv = $('brCv'), r = $('brImg').getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  if (cv.width !== Math.round(r.width * dpr) || cv.height !== Math.round(r.height * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+  return { cv, c: cv.getContext('2d'), W: cv.width, H: cv.height, r, dpr }; }
+// the brushed area stays clear and the rest of the painting dims; the stroke in progress shows as soft light
+function brushDraw(cursor) {
+  const { c, W, H, dpr } = brushCanvas(); c.clearRect(0, 0, W, H);
+  const sel = BRUSH.stamps;
+  if (sel.length) { c.save(); c.fillStyle = 'rgba(20,20,20,.62)'; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'destination-out';
+    sel.forEach(s => { c.beginPath(); c.arc(s.x * W, s.y * H, s.r * W, 0, Math.PI * 2); c.fill(); }); c.restore();
+    c.save(); c.globalCompositeOperation = 'source-over'; }
+  if (BRUSH.stroke.length) { c.save(); c.fillStyle = 'rgba(255,255,255,.28)'; BRUSH.stroke.forEach(s => { c.beginPath(); c.arc(s.x * W, s.y * H, s.r * W, 0, Math.PI * 2); c.fill(); }); c.restore(); }
+  if (cursor) { c.beginPath(); c.arc(cursor.x * W, cursor.y * H, brushSize() * dpr, 0, Math.PI * 2); c.lineWidth = 1.5 * dpr; c.strokeStyle = '#fff'; c.stroke(); c.lineWidth = 1 * dpr; c.strokeStyle = 'rgba(0,0,0,.6)'; c.beginPath(); c.arc(cursor.x * W, cursor.y * H, brushSize() * dpr + 1.5 * dpr, 0, Math.PI * 2); c.stroke(); }
+}
+function brushPoint(e) { const r = $('brImg').getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height, r: brushSize() / r.width }; }
+function brushStamp(pt) { const a = BRUSH.last; if (a) { const d = Math.hypot(pt.x - a.x, (pt.y - a.y) * ($('brImg').naturalHeight / $('brImg').naturalWidth || 1)), n = Math.ceil(d / (pt.r * 0.4)); for (let k = 1; k < n; k++) BRUSH.stroke.push({ x: a.x + (pt.x - a.x) * k / n, y: a.y + (pt.y - a.y) * k / n, r: pt.r }); }
+  BRUSH.stroke.push(pt); BRUSH.last = pt; }
+// on letting go: keep the painting's points under the brushed area, and show only them on the tree
+function brushApply() {
+  BRUSH.stamps = BRUSH.add ? BRUSH.stamps.concat(BRUSH.stroke) : BRUSH.stroke.slice(); BRUSH.stroke = []; BRUSH.last = null;
+  if (!BRUSH.full) BRUSH.full = { base: PT.base, dense: PT.dense };
+  const asp = (PT.h && PT.w) ? PT.h / PT.w : 1, st = BRUSH.stamps;
+  const inside = s => st.some(q => { const dx = s.x - q.x, dy = (s.y - q.y) * asp; return dx * dx + dy * dy <= q.r * q.r; });
+  const sel = BRUSH.full.dense.filter(inside);
+  if (sel.length < 6) { $('brInfo').innerHTML = '<p class="hint">That area is too small to read. Try a bigger brush or a longer stroke.</p>'; brushDraw(); return; }
+  const base = sel.length > 6000 ? sel.filter((_, i) => i % Math.ceil(sel.length / 6000) === 0) : sel;
+  PT.dense = sel; PT.base = base; PT.key = BRUSH.baseKey + '|area' + (++BRUSH.n);
+  cloudCache = null; dense.key = ''; PICK.cur = null; showPick(null); drawWheel(); updateReachLabel();
+  brushDraw(); brushSummary(sel);
+}
+function brushWhole() {
+  if (BRUSH.full) { PT.dense = BRUSH.full.dense; PT.base = BRUSH.full.base; PT.key = BRUSH.baseKey; BRUSH.full = null; }
+  BRUSH.stamps = []; BRUSH.stroke = []; cloudCache = null; dense.key = ''; PICK.cur = null; showPick(null); drawWheel(); updateReachLabel(); brushDraw();
+  $('brInfo').innerHTML = '<p class="hint">Showing the whole painting. Brush over part of it to see only that area on the tree.</p>';
+}
+// the area's overall color and its main colors, each with the closest mix, and every paint they call for
+function brushSummary(pts) {
+  const allowed = new Set(active());
+  const avg = [0, 0, 0]; pts.forEach(s => { avg[0] += s.m.lab[0]; avg[1] += s.m.lab[1]; avg[2] += s.m.lab[2]; }); avg.forEach((v, i) => avg[i] = v / pts.length);
+  const A = munsellOfLab(avg), recA = findRecipe(avg, allowed);
+  // main colors: a few rounds of k-means in Lab
+  const sample = pts.length > 2500 ? pts.filter((_, i) => i % Math.ceil(pts.length / 2500) === 0) : pts, K = Math.min(4, Math.max(1, Math.floor(sample.length / 8)));
+  let C = []; const sorted = sample.slice().sort((a, b) => a.m.lab[0] - b.m.lab[0]); for (let k = 0; k < K; k++) C.push(sorted[Math.floor((k + 0.5) / K * (sorted.length - 1))].m.lab.slice());
+  let asg = new Array(sample.length).fill(0);
+  for (let it = 0; it < 10; it++) {
+    sample.forEach((s, i) => { let b = 0, bd = Infinity; C.forEach((c, k) => { const d = (s.m.lab[0] - c[0]) ** 2 + (s.m.lab[1] - c[1]) ** 2 + (s.m.lab[2] - c[2]) ** 2; if (d < bd) { bd = d; b = k; } }); asg[i] = b; });
+    C = C.map((c, k) => { const m = [0, 0, 0]; let n = 0; sample.forEach((s, i) => { if (asg[i] === k) { m[0] += s.m.lab[0]; m[1] += s.m.lab[1]; m[2] += s.m.lab[2]; n++; } }); return n ? m.map(v => v / n) : c; });
+  }
+  const groups = C.map((c, k) => ({ lab: c, share: asg.filter(a => a === k).length / sample.length })).filter(g => g.share > 0.04).sort((a, b) => b.share - a.share)
+    .map(g => ({ ...g, a: munsellOfLab(g.lab), rec: findRecipe(g.lab, allowed) }));
+  // every paint used across the overall mix and the main colors
+  const need = {}; [recA, ...groups.map(g => g.rec)].forEach(r => { if (r) Object.keys(r.parts).forEach(id => need[id] = (need[id] || 0) + 1); });
+  const needIds = Object.keys(need).sort((a, b) => active().indexOf(a) - active().indexOf(b));
+  BRUSH.recs = { avg: recA, groups };
+  const word = e => e < 1.5 ? 'near exact' : e < 3 ? 'very close' : e < 6 ? 'close' : 'outside the palette';
+  const recList = r => !r ? '<p class="hint">No mix from this palette comes near.</p>' : `<ul class="br-rec">${Object.keys(r.parts).sort((x, y) => r.parts[y] - r.parts[x]).map(id => `<li><span class="chip" style="background:${MASS[id]}"></span>${PIG[id].name}<span class="mono">${fmt(r.parts[id])} ${r.parts[id] === 1 ? 'part' : 'parts'}</span></li>`).join('')}</ul>`;
+  $('brInfo').innerHTML = `<div class="br-sub">This area overall</div>
+    <div class="br-avg"><span class="sw" style="background:${A.hex}"></span><div><div class="nt">${munsellText(A)}</div><div class="ds">${pts.length.toLocaleString()} pixels${recA ? ` · closest mix ΔE ${recA.dE.toFixed(1)}, ${word(recA.dE)}` : ''}</div></div></div>
+    ${recList(recA)}${recA ? '<div><button class="btn primary" id="brLoad">Load into The mix</button></div>' : ''}
+    ${groups.length > 1 ? `<div class="br-sub">Its main colors</div><div class="br-main">${groups.map((g, i) => `<button class="br-col" data-g="${i}" title="${g.rec ? 'Load this mix: ' + recipeText(g.rec.parts) : ''}"><span class="sw" style="background:${g.a.hex}"></span><b>${munsellText(g.a)}</b><span>${Math.round(g.share * 100)}% of the area${g.rec ? ' · ΔE ' + g.rec.dE.toFixed(1) : ''}</span></button>`).join('')}</div>` : ''}
+    ${needIds.length ? `<div class="br-sub">Paints for this area</div><div class="br-need">${needIds.map(id => `<b>${PIG[id].name}</b>`).join(', ')}</div><div><button class="btn" id="brLoadAll">Load all of them</button></div>` : ''}`;
+}
+(function initBrush() {
+  const fr = $('brFrame');
+  fr.addEventListener('pointerdown', e => { if (e.button !== undefined && e.button > 0) return; e.preventDefault(); fr.setPointerCapture(e.pointerId); BRUSH.down = true; BRUSH.stroke = []; BRUSH.last = null; brushStamp(brushPoint(e)); brushDraw(brushPoint(e)); });
+  fr.addEventListener('pointermove', e => { const pt = brushPoint(e); if (BRUSH.down) brushStamp(pt); brushDraw(pt); });
+  fr.addEventListener('pointerleave', () => { if (!BRUSH.down) brushDraw(); });
+  const up = () => { if (!BRUSH.down) return; BRUSH.down = false; brushApply(); };
+  fr.addEventListener('pointerup', up); fr.addEventListener('pointercancel', up);
+  $('brSize').addEventListener('input', () => { brushSize(); });
+  $('brNew').addEventListener('click', () => { BRUSH.add = false; $('brNew').setAttribute('aria-pressed', 'true'); $('brAdd').setAttribute('aria-pressed', 'false'); });
+  $('brAdd').addEventListener('click', () => { BRUSH.add = true; $('brNew').setAttribute('aria-pressed', 'false'); $('brAdd').setAttribute('aria-pressed', 'true'); });
+  $('brAll').addEventListener('click', brushWhole);
+  $('brClose').addEventListener('click', () => { $('brushBox').hidden = true; $('ptBrush').textContent = 'Brush an area'; });
+  $('ptBrush').addEventListener('click', () => { if (!$('brushBox').hidden) { $('brushBox').hidden = true; $('ptBrush').textContent = 'Brush an area'; } else brushOpen(); });
+  $('brInfo').addEventListener('click', e => {
+    const load = parts => { state.mix = { ...parts }; renderIngredients(); renderPalette(); update(); };
+    if (e.target.closest('#brLoad') && BRUSH.recs && BRUSH.recs.avg) load(BRUSH.recs.avg.parts);
+    const g = e.target.closest('[data-g]'); if (g && BRUSH.recs) { const r = BRUSH.recs.groups[+g.dataset.g].rec; if (r) load(r.parts); }
+    if (e.target.closest('#brLoadAll') && BRUSH.recs) { const parts = {}; [BRUSH.recs.avg, ...BRUSH.recs.groups.map(x => x.rec)].forEach(r => { if (r) for (const id in r.parts) parts[id] = Math.max(parts[id] || 0, 1); });
+      if (BRUSH.recs.avg) for (const id in BRUSH.recs.avg.parts) parts[id] = BRUSH.recs.avg.parts[id]; load(parts); }
+  });
+  window.addEventListener('resize', () => { if (!$('brushBox').hidden) brushDraw(); });
 })();
 </script>
 
