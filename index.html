@@ -465,6 +465,8 @@ html,body{overflow-x:clip} body{margin:0}
 
 <div class="wrap">
   <header class="hero" id="hero">
+    <div class="acct" id="acct" hidden><button class="acct-btn" id="acctBtn" type="button">Sign in</button>
+      <div class="acct-menu" id="acctMenu" hidden><span class="acct-who" id="acctWho"></span><button type="button" data-go-studio>Studio videos</button><button type="button" id="acctOut">Sign out</button></div></div>
     <div class="hero-bg"><div class="hero-img" role="img" aria-label="Michael Klein's working palette, thick with paint"></div>
     <div class="hero-shade" aria-hidden="true"></div></div>
     <div class="hero-in">
@@ -688,8 +690,66 @@ html,body{overflow-x:clip} body{margin:0}
   </section>
 
 
+  <section class="card studio" id="studioCard" aria-label="Artist's Mixing Palette Studio" hidden>
+    <div class="card-head"><h2>Artist’s Mixing Palette Studio</h2><span class="label" id="stLabel">Members</span></div>
+    <div id="stOut"><p class="st-pitch">A free account opens the palette builder and the Studio video library, where Michael shows how he uses this palette in his own painting.</p>
+      <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button></div></div>
+    <div id="stIn" hidden><div class="st-player" id="stPlayer" hidden></div><div class="st-list" id="stList"></div></div>
+  </section>
+
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
+
+<dialog class="auth" id="authDlg" aria-labelledby="authTitle">
+  <form id="authForm" novalidate>
+    <button class="x auth-x" type="button" id="authClose" aria-label="Close">×</button>
+    <h2 id="authTitle">Sign in</h2>
+    <p class="auth-why" id="authWhy" hidden></p>
+    <label class="auth-f" id="authEmailF"><span>Email</span><input type="email" id="authEmail" autocomplete="email" required></label>
+    <label class="auth-f" id="authPassF"><span>Password</span><input type="password" id="authPass" autocomplete="current-password" minlength="8" required></label>
+    <p class="auth-msg" id="authMsg" role="status"></p>
+    <button class="st-btn auth-go" type="submit" id="authGo">Sign in</button>
+    <div class="auth-alt" id="authAlt"></div>
+  </form>
+</dialog>
+
+<style id="studio-css">
+.acct{position:absolute; top:18px; right:max(16px, calc(50vw - 760px)); z-index:7}
+.acct-btn{font:600 .82rem var(--body); letter-spacing:.06em; color:#ebe3cf; background:rgba(20,18,15,.55); border:1px solid rgba(235,227,207,.35); border-radius:999px; padding:7px 16px; cursor:pointer; backdrop-filter:blur(6px)}
+.acct-btn:hover{border-color:rgba(235,227,207,.7)}
+.acct-menu{position:absolute; right:0; top:calc(100% + 6px); background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:6px; display:flex; flex-direction:column; min-width:200px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.acct-menu button{all:unset; cursor:pointer; padding:8px 10px; border-radius:8px; font-size:.88rem; color:var(--ink)}
+.acct-menu button:hover, .acct-menu button:focus-visible{background:rgba(255,255,255,.07)}
+.acct-who{padding:6px 10px 8px; font-size:.78rem; color:var(--muted); border-bottom:1px solid var(--line); margin-bottom:4px; overflow-wrap:anywhere}
+.studio .st-pitch{margin:0; max-width:60ch; color:var(--muted)}
+.st-acts{display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.st-btn{font:600 .9rem var(--body); color:#2a261f; background:var(--ink); border:0; border-radius:999px; padding:10px 20px; cursor:pointer}
+.st-btn:disabled{opacity:.6; cursor:default}
+.st-link{all:unset; cursor:pointer; font-size:.88rem; color:var(--ink); text-decoration:underline; text-underline-offset:3px}
+.st-list{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px}
+.st-vid{all:unset; cursor:pointer; display:flex; flex-direction:column; gap:4px; padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--panel-2)}
+.st-vid:hover, .st-vid:focus-visible, .st-vid[aria-current="true"]{border-color:var(--ink)}
+.st-vid b{font-family:var(--display); font-size:1.15rem; font-weight:600; line-height:1.15}
+.st-vid span{font-size:.84rem; color:var(--muted)}
+.st-player{position:relative; width:100%; max-width:960px; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000}
+.st-player iframe{position:absolute; inset:0; width:100%; height:100%; border:0}
+.st-empty{margin:0; color:var(--muted)}
+.auth{border:1px solid var(--line); border-radius:16px; background:var(--panel); color:var(--ink); padding:0; width:min(400px, calc(100vw - 32px))}
+.auth::backdrop{background:rgba(0,0,0,.55)}
+.auth form{display:flex; flex-direction:column; gap:12px; padding:24px; position:relative}
+.auth h2{font-size:1.7rem}
+.auth-x{position:absolute; top:14px; right:14px}
+.auth-why{margin:0; font-size:.88rem; color:var(--muted)}
+.auth-f{display:flex; flex-direction:column; gap:4px; font-size:.8rem; color:var(--muted)}
+.auth-f input{font:inherit; font-size:1rem; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
+.auth-f input:focus{outline:2px solid var(--ink); outline-offset:1px}
+.auth-msg{margin:0; min-height:1.2em; font-size:.86rem}
+.auth-msg.err{color:#e7a08f}
+.auth-go{align-self:stretch; margin-top:4px}
+.auth-alt{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:.86rem}
+.pal-build .lock{opacity:.7; font-size:.8em; margin-left:6px}
+@media (max-width:700px){ .acct{top:12px} }
+</style>
 
 <style id="brush-css">
 .brush{display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(260px, 1fr); gap:16px 20px; background:var(--panel-2); border-radius:14px; padding:14px; align-items:start}
@@ -1092,6 +1152,140 @@ const state = { mix: {}, strA: 'ac', strB: 'um', tree: 'palette', palette: 'klei
 try { const s = localStorage.getItem('mmp-cloud'); if (s !== null) state.cloud = s === '1'; const stv = localStorage.getItem('mmp-style'); if (stv === 'lines' || stv === 'squares') state.cloudStyle = stv; const nmv = localStorage.getItem('mmp-names'); if (nmv !== null) state.names = nmv === '1'; const c = localStorage.getItem('mmp-cloudsrc'); if (c === 'mix' || c === 'palette') state.cloudSrc = c; } catch (e) {}
 
 const $ = id => document.getElementById(id);
+// ---- Members: free account (Supabase email + password) opens the palette builder and the Studio videos.
+// Runs only on the public site; inside claude.ai previews everything stays open.
+const SB_URL = 'https://kuwtznrchpybueorrjqp.supabase.co';
+const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
+const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';
+const STUDIO = {
+  on: false, sb: null, user: null, after: null, mode: 'in', vids: null, checked: false, why: '',
+  allow(fn, why) { if (!this.on || this.user) return true; this.after = fn; this.why = why;
+    if (this.checked) this.open('in', why); return false; }, // before the session check finishes, wait for it
+  init() {
+    this.on = !!shareBase();
+    if (!this.on) return;
+    $('acct').hidden = false; $('studioCard').hidden = false;
+    const s = document.createElement('script'); s.src = SB_LIB; s.async = true;
+    s.onload = () => {
+      try { this.sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { return this.fail(); }
+      this.sb.auth.onAuthStateChange((ev, session) => {
+        this.setUser(session ? session.user : null);
+        if (!this.checked) { this.checked = true; if (!this.user && this.after) this.open('in', this.why); }
+        if (ev === 'PASSWORD_RECOVERY') this.open('reset');
+      });
+    };
+    s.onerror = () => this.fail();
+    document.head.appendChild(s);
+    this.wire();
+  },
+  fail() { // members service unreachable: keep everything usable rather than locked
+    this.on = false; this.checked = true; if (this.after) { const f = this.after; this.after = null; setTimeout(f, 50); } $('acct').hidden = true;
+    $('stOut').innerHTML = '<p class="st-empty">The members area couldn’t load just now. Please try again later.</p>';
+    if (typeof renderPalLists === 'function') try { renderPalLists(); } catch (e) {}
+  },
+  setUser(u) {
+    const was = this.user && this.user.id, now = u && u.id;
+    this.user = u;
+    $('acctBtn').textContent = u ? 'Account' : 'Sign in';
+    $('acctWho').textContent = u ? u.email : '';
+    $('stOut').hidden = !!u; $('stIn').hidden = !u;
+    $('stLabel').textContent = u ? 'Video library' : 'Members';
+    if (!u) { $('acctMenu').hidden = true; $('stPlayer').hidden = true; $('stPlayer').innerHTML = ''; this.vids = null; }
+    if (u && was !== now) this.loadVideos();
+    try { renderPalLists(); } catch (e) {}
+    if (u && this.after) { const f = this.after; this.after = null; if ($('authDlg').open) $('authDlg').close(); setTimeout(f, 50); }
+  },
+  open(mode, why) {
+    this.mode = mode; const d = $('authDlg');
+    const T = { in: ['Sign in', 'Sign in'], up: ['Create a free account', 'Create account'], forgot: ['Reset your password', 'Send reset link'], reset: ['Set a new password', 'Save password'] }[mode];
+    $('authTitle').textContent = T[0]; $('authGo').textContent = T[1]; $('authGo').disabled = false;
+    $('authEmailF').hidden = mode === 'reset'; $('authPassF').hidden = mode === 'forgot';
+    $('authPass').autocomplete = mode === 'in' ? 'current-password' : 'new-password'; $('authPass').value = '';
+    $('authPassF').querySelector('span').textContent = mode === 'in' ? 'Password' : mode === 'reset' ? 'New password (8 or more characters)' : 'Password (8 or more characters)';
+    if (why !== undefined) { $('authWhy').textContent = why || ''; $('authWhy').hidden = !why; }
+    this.msg('');
+    $('authAlt').innerHTML = mode === 'in' ? '<button class="st-link" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="forgot">Forgot password?</button>'
+      : mode === 'reset' ? '' : '<button class="st-link" type="button" data-auth="in">Back to sign in</button>';
+    if (!d.open) d.showModal();
+    setTimeout(() => (mode === 'reset' ? $('authPass') : $('authEmail')).focus(), 30);
+  },
+  msg(t, err) { const m = $('authMsg'); m.textContent = t; m.classList.toggle('err', !!err); },
+  async submit() {
+    if (!this.sb) return this.msg('Still connecting — try again in a moment.', true);
+    const email = $('authEmail').value.trim(), pass = $('authPass').value, mode = this.mode;
+    if (mode !== 'reset' && !/^\S+@\S+\.\S+$/.test(email)) return this.msg('Please enter your email address.', true);
+    if (mode !== 'forgot' && mode !== 'in' && pass.length < 8) return this.msg('Use at least 8 characters for the password.', true);
+    if (mode === 'in' && !pass) return this.msg('Please enter your password.', true);
+    $('authGo').disabled = true; this.msg('One moment…');
+    const back = shareBase();
+    try {
+      if (mode === 'in') {
+        const { error } = await this.sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+        $('authDlg').close();
+      } else if (mode === 'up') {
+        const { data, error } = await this.sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: back } });
+        if (error) throw error;
+        if (data.session) $('authDlg').close();
+        else this.msg('Almost there. Check your email for a confirmation link, then come back and sign in.');
+      } else if (mode === 'forgot') {
+        const { error } = await this.sb.auth.resetPasswordForEmail(email, { redirectTo: back });
+        if (error) throw error;
+        this.msg('If that email has an account, a reset link is on its way.');
+      } else {
+        const { error } = await this.sb.auth.updateUser({ password: pass });
+        if (error) throw error;
+        this.msg('Password saved. You’re signed in.'); setTimeout(() => $('authDlg').open && $('authDlg').close(), 1200);
+      }
+    } catch (e) {
+      const t = String(e && e.message || e);
+      this.msg(/invalid login/i.test(t) ? 'That email and password don’t match an account.'
+        : /not confirmed/i.test(t) ? 'Please confirm your email first. The link is in your inbox.'
+        : /already registered/i.test(t) ? 'That email already has an account. Try signing in.'
+        : /rate limit|too many/i.test(t) ? 'Too many tries. Please wait a few minutes.'
+        : t, true);
+    }
+    $('authGo').disabled = false;
+  },
+  async loadVideos() {
+    const L = $('stList'); L.innerHTML = '<p class="st-empty">Loading videos…</p>';
+    let rows = [];
+    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url').order('sort', { ascending: true }); if (!error && data) rows = data; } catch (e) {}
+    this.vids = rows;
+    const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    L.innerHTML = rows.length ? rows.map((v, i) => `<button class="st-vid" type="button" data-vid="${i}"><b>${esc(v.title)}</b>${v.description ? `<span>${esc(v.description)}</span>` : ''}</button>`).join('')
+      : '<p class="st-empty">The first Studio videos are on the way. They’ll appear here as soon as they’re posted.</p>';
+  },
+  embed(url) {
+    let m = String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/);
+    if (m) return 'https://www.youtube-nocookie.com/embed/' + m[1] + '?rel=0&autoplay=1';
+    m = String(url).match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/([0-9a-f]{6,}))?/);
+    if (m) { const h = m[2] || (String(url).match(/[?&]h=([0-9a-f]+)/) || [])[1]; return 'https://player.vimeo.com/video/' + m[1] + '?autoplay=1' + (h ? '&h=' + h : ''); }
+    return '';
+  },
+  play(i) {
+    const v = this.vids && this.vids[i]; if (!v) return;
+    const src = this.embed(v.url);
+    if (!src) { window.open(v.url, '_blank', 'noopener'); return; }
+    const P = $('stPlayer'); P.hidden = false;
+    P.innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Studio video"></iframe>`;
+    document.querySelectorAll('.st-vid').forEach(b => b.setAttribute('aria-current', b.dataset.vid == i ? 'true' : 'false'));
+    P.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  },
+  wire() {
+    $('acctBtn').addEventListener('click', e => { e.stopPropagation(); if (this.user) $('acctMenu').hidden = !$('acctMenu').hidden; else this.open('in', ''); });
+    document.addEventListener('click', e => { if (!e.target.closest('#acct')) $('acctMenu').hidden = true; });
+    $('acctOut').addEventListener('click', async () => { $('acctMenu').hidden = true; if (this.sb) await this.sb.auth.signOut(); });
+    document.addEventListener('click', e => {
+      const a = e.target.closest('[data-auth]'); if (a) { this.open(a.dataset.auth, a.closest('#authDlg') ? undefined : ''); return; }
+      if (e.target.closest('[data-go-studio]')) { $('acctMenu').hidden = true; $('studioCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+      const v = e.target.closest('[data-vid]'); if (v) this.play(+v.dataset.vid);
+    });
+    $('authForm').addEventListener('submit', e => { e.preventDefault(); this.submit(); });
+    $('authClose').addEventListener('click', () => { this.after = null; $('authDlg').close(); });
+    $('authDlg').addEventListener('cancel', () => { this.after = null; });
+  }
+};
 const PALETTES = {
   klein: { group: 'mine', name: 'Michael Klein', dates: 'b. 1980', ids: ['ru', 'bu', 'ib', 'um', 'cb', 'cv', 'ac', 'mg', 'bs', 'bp', 'co', 'qy', 'cy', 'tw', 'vg', 'mb', 'cr'], white: 'titanium', photo: true,
     note: 'My working palette, laid out left to right in studio order.' },
@@ -2409,7 +2603,7 @@ function renderPalLists() {
     if (!ks.length) return '';
     return `<h4>${label}</h4>` + ks.map(k => { const P = PALETTES[k];
       return `<button class="pal-row" role="option" data-pal="${k}" aria-selected="${k === state.palette}"><span class="pr-name">${nameH(P)}</span><span class="pr-n">${/colors/.test(P.dates || '') ? '' : P.ids.length + ' colors'}</span></button>`; }).join('');
-  }).join('') + '<button class="pal-row pal-build" data-build="1">+ Build your own palette</button>';
+  }).join('') + '<button class="pal-row pal-build" data-build="1">+ Build your own palette' + (STUDIO.on && !STUDIO.user ? '<span class="lock"> · free account</span>' : '') + '</button>';
   $('palList').innerHTML = `<button class="pal-cur" id="palToggle" aria-haspopup="listbox" aria-expanded="${open}" aria-label="Palette: ${cur.name}. Choose another palette">
       <span class="pc-text"><span class="pc-name">${cur.name}</span>${cur.dates ? `<span class="pc-dates">${cur.dates}</span>` : ''}<span class="pc-caret">${Object.keys(PALETTES).filter(k => !k.startsWith('__')).length} palettes ▾</span></span></button>
     <div class="pal-menu" id="palMenu" role="listbox" aria-label="Choose a palette"${open ? '' : ' hidden'}>${groups}</div>`;
@@ -2566,6 +2760,7 @@ const reachLib = () => REACH_LIB || (REACH_LIB = reachSet(BUILD_IDS));
 
 const BUILDER = {
   ids: [], name: '', editKey: null, prev: null, open(editKey) {
+    if (!STUDIO.allow(() => this.open(editKey), 'Sign in to build and save your own palettes.')) return false;
     if (ANIM && ANIM.on) stopAnim();
     if (isPainting()) setTreeMode('palette');
     const editing = editKey && PALETTES['u_' + editKey];
@@ -2673,8 +2868,10 @@ function shareBase() { const h = location.host || ''; return /^https?:$/.test(lo
   document.addEventListener('click', e => { if (e.target.closest('#palEdit')) { const P = curPal(); if (P.custom) BUILDER.open(P.k); } });
   // opening a shared palette link puts that palette in the builder, ready to save
   const m = (location.hash || '').match(/^#palette=([^:]*):([a-z0-9,]+)$/i);
-  if (m) setTimeout(() => { BUILDER.open(); BUILDER.ids = m[2].split(',').filter(id => PIG[id]); $('bdName').value = decodeURIComponent(m[1]).slice(0, 40); BUILDER.apply();
-    $('bdMsg').textContent = 'A shared palette. Save it to keep it in your palettes.'; }, 300);
+  const loadShared = () => { if (BUILDER.open() === false) { STUDIO.after = loadShared; return; } BUILDER.ids = m[2].split(',').filter(id => PIG[id]); $('bdName').value = decodeURIComponent(m[1]).slice(0, 40); BUILDER.apply();
+    $('bdMsg').textContent = 'A shared palette. Save it to keep it in your palettes.'; };
+  if (m) setTimeout(loadShared, 300);
+  STUDIO.init();
 })();
 (() => { let k = 'klein'; try { const s = localStorage.getItem('mmp-palette'); if (s && PALETTES[s]) k = s; } catch (er) {} setPalette(k); })();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawWheel());
