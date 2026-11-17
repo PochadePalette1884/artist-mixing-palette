@@ -512,7 +512,7 @@ html,body{overflow-x:clip} body{margin:0}
 
   <div class="main">
     <section class="card" aria-label="Mixer">
-      <div class="card-head"><h2>The mix</h2><button class="x" id="clearMix" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Clear</button></div>
+      <div class="card-head"><h2>The mix</h2><div style="display:flex;gap:8px;align-items:center"><button class="x" id="mixToTree" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem" title="Find this mix on the Munsell tree">See where it sits</button><button class="x" id="clearMix" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Clear</button></div></div>
       <div class="swatch-row">
         <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
           <div class="big" id="bigSw" role="img" aria-label="Drawdown of the mix over the ground and a black stripe">
@@ -734,6 +734,7 @@ html,body{overflow-x:clip} body{margin:0}
 </dialog>
 
 <style id="studio-css">
+#mixToTree:disabled{opacity:.4; cursor:default}
 .acct{position:absolute; top:18px; right:max(16px, calc(50vw - 760px)); z-index:7}
 .acct-btn{font:600 .82rem var(--body); letter-spacing:.06em; color:#ebe3cf; background:rgba(20,18,15,.55); border:1px solid rgba(235,227,207,.35); border-radius:999px; padding:7px 16px; cursor:pointer; backdrop-filter:blur(6px)}
 .acct-btn:hover{border-color:rgba(235,227,207,.7)}
@@ -1514,7 +1515,7 @@ function renderPalette() {
 }
 /* ---------- mixer ---------- */
 function renderIngredients() {
-  const ids = Object.keys(state.mix);
+  const ids = Object.keys(state.mix); if (typeof syncMixToTree === 'function') syncMixToTree();
   if (!ids.length) { $('ings').innerHTML = '<p class="hint">The mix is empty. Tap a pigment on the palette to start.</p>'; return; }
   $('ings').innerHTML = ids.map(id => `<div class="ing">
     <span class="chip${id === 'og' ? ' clear-chip' : ''}" style="${chipBg(id)}"></span>
@@ -2225,13 +2226,24 @@ function findRecipe(target, allowedSet) {
       if (r.dE < best.dE - 0.4) best = r;
     }
   }
-  // drop tiny parts, express as simple numbers of parts
-  const P = best.parts, mxp = Math.max(...Object.values(P));
-  for (const id in P) if (P[id] / mxp < 0.03) delete P[id];
-  const mn = Math.min(...Object.values(P));
-  const out = {}; for (const id in P) out[id] = Math.max(0.5, Math.round(P[id] / mn * 2) / 2);
-  const kk = Math.max(...Object.values(out)); if (kk > 12) for (const id in out) out[id] = Math.max(0.5, Math.round(out[id] * 12 / kk * 2) / 2);
-  return { parts: out, dE: dE00(labOfParts(out), target) };
+  // express as simple numbers of parts, but never let the rounding spoil the mix:
+  // pale tints and greys need a lot of white against a little color, so allow more parts when simple ones drift
+  const exact = dE00(labOfParts(best.parts), target);
+  const simplify = (cap, drop) => {
+    const P = { ...best.parts }, mxp = Math.max(...Object.values(P));
+    for (const id in P) if (P[id] / mxp < drop) delete P[id];
+    const mn = Math.min(...Object.values(P)), out = {};
+    for (const id in P) out[id] = Math.max(0.5, Math.round(P[id] / mn * 2) / 2);
+    const kk = Math.max(...Object.values(out)); if (kk > cap) for (const id in out) out[id] = Math.max(0.5, Math.round(out[id] * cap / kk * 2) / 2);
+    return { parts: out, dE: dE00(labOfParts(out), target) };
+  };
+  let res = null;
+  for (const [cap, drop] of [[12, 0.03], [24, 0.02], [48, 0.01], [100, 0.005], [200, 0]]) {
+    const r = simplify(cap, drop);
+    if (!res || r.dE < res.dE) res = r;
+    if (r.dE <= Math.max(exact + 1, 2)) { res = r; break; } // within what reads as the same color
+  }
+  return res;
 }
 /* ---------- pick a color on the tree ---------- */
 const HIT = { cloud: null, lines: null, pigs: [] }, PICK = { cur: null };
@@ -2649,6 +2661,18 @@ $('pkBigImg').addEventListener('click', e => {
 $('pkComp').addEventListener('click', viewPickComp);
 $('pkLoad').addEventListener('click', () => { if (!PICK.cur || !PICK.cur.parts) return; state.mix = { ...PICK.cur.parts }; renderIngredients(); renderPalette(); update();
   if (!document.getElementById('treeCard').classList.contains('full')) { const mc = document.querySelector('[aria-label="Mixer"]'); if (mc) mc.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); } });
+// the other direction: send the current mix to Where it sits, opened in the same window a tree pick uses
+$('mixToTree').addEventListener('click', () => {
+  const parts = {}; for (const id in state.mix) if (PIG[id] && state.mix[id] > 0) parts[id] = state.mix[id];
+  if (!Object.keys(parts).length) return;
+  if (isPainting()) setTreeMode('palette');
+  const a = analyze(mixR(parts));
+  PICK.cur = { parts: { ...parts }, a, p: pt3(a), fromMix: true }; showPick(PICK.cur);
+  document.querySelector('#picked .label').textContent = 'Your mix, on the tree';
+  render();
+  const tc = $('treeCard'); if (!tc.classList.contains('full')) tc.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+});
+function syncMixToTree() { const b = $('mixToTree'); if (b) b.disabled = !Object.keys(state.mix).some(id => PIG[id] && state.mix[id] > 0); }
 // palette buttons, built from PALETTES so new palettes appear in both places automatically
 function renderPalLists() {
   const open = !!($('palMenu') && !$('palMenu').hidden), cur = curPal();
