@@ -641,7 +641,7 @@ html,body{overflow-x:clip} body{margin:0}
 
   <section class="card mapc" id="mapCard" aria-label="Map the mixes" hidden>
     <div class="card-head"><h2>Map the mixes</h2><div class="mp-acts"><button class="x" id="mpPrint" type="button" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Print key</button><button class="x" id="mpClose" type="button" aria-label="Close the map">×</button></div></div>
-    <div class="mp-ctl"><label class="mp-n" for="mpN">Locations <input type="range" id="mpN" min="10" max="20" step="1" value="14"> <span class="mono" id="mpNLab">14</span></label><label class="mp-n" for="mpSrc">Paints from <select id="mpSrc"><option value="lib">the 31-paint library</option><option value="pal">your selected palette</option></select></label><span class="mp-msg" id="mpMsg"></span></div>
+    <div class="mp-ctl"><label class="mp-n" for="mpN">Locations <input type="range" id="mpN" min="20" max="50" step="1" value="30"> <span class="mono" id="mpNLab">30</span></label><label class="mp-n" for="mpSrc">Paints from <select id="mpSrc"><option value="lib">the 31-paint library</option><option value="pal">your selected palette</option></select></label><span class="mp-msg" id="mpMsg"></span></div>
     <p class="mp-mem mp-hint">Tap the picture to add a location of your own, such as a cheek, a knuckle or the shadow side of a collar. <button class="linkbtn" id="mpAdded" type="button" hidden>Clear added locations</button></p>
     <div class="mp-pal" id="mpPal"></div>
     <div class="mp-fig" id="mpFig"><div class="mp-imgbox"><img id="mpImg" alt="Your piece with its mix locations marked"><div class="mp-pins" id="mpPins"></div></div><div class="mp-tip" id="mpTip" hidden></div></div>
@@ -762,6 +762,7 @@ html,body{overflow-x:clip} body{margin:0}
 .mp-pin:hover, .mp-pin:focus-visible, .mp-pin.on{opacity:1; transform:translate(-50%,-50%) scale(1.35); z-index:2; outline:0}
 .mp-pin.far{border-style:dashed}
 .mp-pin.added{border-color:#e6c27a}
+.mp-pins.dense .mp-pin{width:21px; height:21px; font-size:.62rem; border-width:1.5px}
 .mp-imgbox > img{cursor:crosshair}
 #mpSrc{font:inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:4px 8px}
 .mp-tip{position:absolute; z-index:5; transform:translate(18px,-50%); display:flex; gap:10px; align-items:flex-start; width:max-content; max-width:min(340px, 70vw); background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; box-shadow:0 10px 26px rgba(0,0,0,.4); pointer-events:none; line-height:1.35}
@@ -794,7 +795,8 @@ html,body{overflow-x:clip} body{margin:0}
   #mpPrintArea .mpp-fig img{max-width:100%; max-height:52vh; width:auto; display:block}
   #mpPrintArea .mpp-fig span{position:absolute; transform:translate(-50%,-50%); width:16pt; height:16pt; border-radius:50%; background:#fff; border:1.5pt solid #000; font:700 8pt/16pt Arial, sans-serif; text-align:center}
   #mpPrintArea ol{list-style:none; padding:0; columns:2; column-gap:18pt; font-size:9pt}
-  #mpPrintArea li{break-inside:avoid; margin:0 0 5pt; display:flex; gap:6pt; align-items:baseline}
+  #mpPrintArea ol{columns:3 !important; column-gap:14pt !important; font-size:8pt !important}
+  #mpPrintArea li{break-inside:avoid; margin:0 0 3pt; display:flex; gap:6pt; align-items:baseline}
   #mpPrintArea li i{display:inline-block; width:14pt; height:10pt; border:.5pt solid #555; flex:none}
   #mpPrintArea small{color:#555}
   .mpp-foot{font-size:8pt; color:#666}
@@ -2838,6 +2840,7 @@ var MAP = {
     $('mpPal').innerHTML = `<p class="mp-need">Paints for this piece${from} <b>(${n})</b>:</p><div class="mp-paints">` +
       this.set.map(id => `<span class="mp-paint"><img src="${anyDab(id)}" alt=""><span>${esc(PIG[id].name)}</span></span>`).join('') +
       `</div><button class="linkbtn" id="mpUse" type="button">Use these paints</button>`;
+    $('mpPins').classList.toggle('dense', pins.length > 30);
     $('mpPins').innerHTML = pins.map(p => `<button class="mp-pin${p.rec && p.rec.dE > 6 ? ' far' : ''}${p.added ? ' added' : ''}" type="button" data-pin="${p.n - 1}" style="left:${(p.x * 100).toFixed(2)}%;top:${(p.y * 100).toFixed(2)}%;--c:${p.hex}" aria-label="Location ${p.n}, ${esc(munsellText(p.m))}">${p.n}</button>`).join('');
     $('mpList').innerHTML = pins.map(p => `<li data-pin="${p.n - 1}"><span class="mp-no">${p.n}</span><span class="mp-sw"><i style="background:${p.hex}" title="In the piece"></i><i style="background:${p.mixHex || p.hex}" title="The mix"></i></span><span class="mp-txt"><b class="mono">${esc(munsellText(p.m))}</b><span>${p.rec ? esc(recipeText(p.rec.parts)) : 'No mix found'}</span></span><span class="mp-de mono ${p.rec && p.rec.dE < 3 ? 'fit-good' : p.rec && p.rec.dE < 6 ? 'fit-ok' : 'fit-far'}">${p.rec ? 'ΔE ' + p.rec.dE.toFixed(1) : ''}</span></li>`).join('');
   },
