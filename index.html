@@ -228,7 +228,16 @@ body.tree-full{overflow:hidden}
 .bk-ph .bk-meta .pg{font-style:italic; line-height:1.4}
 .bk-ph .bk-opp{background:none; border:0; color:#3d3729; text-decoration:underline; text-underline-offset:2px; cursor:pointer; font:inherit; padding:0}
 .bk-loc{width:74px; height:74px; flex:none}
-.bk-body{display:grid; grid-template-columns:18px minmax(0,1fr); gap:6px}
+.bk-body{display:grid; grid-template-columns:18px auto minmax(0,1fr); gap:6px}
+.bk-big{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:0 4% 26px; min-width:0}
+.bk-big:empty{visibility:hidden}
+.bk-big .bk-chipb{width:min(300px, 100%); aspect-ratio:4/5; cursor:default; box-shadow:0 1px 2px rgba(60,40,10,.35), 0 8px 22px rgba(60,40,10,.18)}
+.bk-big .bk-chipb:hover{outline:0}
+.bk-big b{font-family:var(--display); font-size:1.7rem; font-weight:600; color:#2f2a20; line-height:1; letter-spacing:.01em}
+.bk-big small{font-family:var(--display); font-style:italic; font-size:.85rem; color:#6f6550; margin-top:-8px; text-align:center}
+.bk-book.spread .bk-big .bk-chipb{width:min(170px, 100%)}
+.bk-book.spread .bk-big b{font-size:1.25rem}
+@media (max-width:700px){ .bk-body{grid-template-columns:18px minmax(0,1fr)} .bk-big{display:none} }
 .bk-vax{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-family:var(--display); font-size:.7rem; letter-spacing:.3em; color:#6f6550}
 .bk-vax span{writing-mode:vertical-rl; transform:rotate(180deg)}
 .bk-vax i, .bk-cax i{display:block; background:#8a7f68}
@@ -2969,12 +2978,22 @@ function bkPageHTML(i) {
   g += '</div>';
   return `<div class="bk-page" data-i="${i}"><div class="bk-ph"><h3>${nm.label.replace(/^(\d+(?:\.\d+)?)/, m => (+m).toFixed(1))}<small>${FAMNAMES[nm.fam]}</small></h3>
     <div class="bk-meta"><span class="pg">page ${i + 1} of 40<br>opposite <button class="bk-opp" data-go="${opp}">${bkName(BK_HUES[opp]).label}</button></span>${bkLocator(h)}</div></div>
-    <div class="bk-body"><div class="bk-vax"><i class="up"></i><span>VALUE</span></div><div>${g}<div class="bk-cax"><span>CHROMA</span><i class="rt"></i></div></div></div></div>`;
+    <div class="bk-body"><div class="bk-vax"><i class="up"></i><span>VALUE</span></div><div>${g}<div class="bk-cax"><span>CHROMA</span><i class="rt"></i></div></div><div class="bk-big" data-h="${h}" aria-live="polite"></div></div></div>`;
+}
+function bkBigFill() { // the selected chip, shown large in the page's empty space
+  $('bkBook').querySelectorAll('.bk-big').forEach(el => {
+    const s = BOOK.sel, h = +el.dataset.h;
+    if (!s || s.h !== h) { el.innerHTML = ''; return; }
+    const lab = s.C ? bkLab(h, s.V, s.C) : [munsellLofV(s.V), 0, 0], hex = lab2hex(...lab), nm = bkName(h);
+    el.innerHTML = `<span class="bk-chipb" style="background-color:${hex}" role="img" aria-label="${s.C ? nm.label + ' ' + s.V + '/' + s.C : 'N ' + s.V + '/'}"></span>`
+      + `<b>${s.C ? `${nm.label} ${s.V}/${s.C}` : `N ${s.V}/`}</b><small>${s.C ? FAMNAMES[nm.fam].toLowerCase() + ' · value ' + s.V + ' · chroma ' + s.C : 'neutral · value ' + s.V}</small>`;
+  });
 }
 function renderBook() {
   const sp = bkSpread(); if (sp && BOOK.i % 2) BOOK.i -= 1;
   const book = $('bkBook'); book.classList.toggle('spread', sp);
   book.innerHTML = bkPageHTML(BOOK.i) + (sp ? bkPageHTML((BOOK.i + 1) % 40) : '');
+  bkBigFill();
   $('bkTabs').querySelectorAll('.bk-tab').forEach((t, k) => t.setAttribute('aria-selected', k === BOOK.i || (sp && k === (BOOK.i + 1) % 40)));
   const cur = $('bkTabs').children[BOOK.i]; if (cur && cur.scrollIntoView && $('bkTabs').scrollWidth > $('bkTabs').clientWidth) $('bkTabs').scrollLeft = cur.offsetLeft - $('bkTabs').clientWidth / 2;
 }
@@ -3001,8 +3020,9 @@ function bkSelect(h, V, C) {
   if (!rec) { $('bkRec').textContent = 'No mix found from this palette.'; $('bkLoad').hidden = true; }
   else { const e = rec.dE, word = e < 1.5 ? 'near exact' : e < 3 ? 'very close' : e < 6 ? 'close' : 'outside the palette';
     $('bkRec').innerHTML = `Closest mix from ${PALETTES[state.palette].name}: ${recipeText(rec.parts)} · <b>ΔE ${e.toFixed(1)}, ${word}</b>`; $('bkLoad').hidden = false; }
+  bkBigFill();
   $('bkBook').querySelectorAll('.bk-chipb.sel').forEach(b => b.classList.remove('sel'));
-  $('bkBook').querySelectorAll(`.bk-chipb[data-h="${h}"][data-v="${V}"][data-c="${C}"]`).forEach(b => b.classList.add('sel'));
+  $('bkBook').querySelectorAll(`.bk-grid .bk-chipb[data-h="${h}"][data-v="${V}"][data-c="${C}"]`).forEach(b => b.classList.add('sel'));
 }
 (function initBook() {
   let html = ''; BK_HUES.forEach((h, k) => { const nm = bkName(h), lab = bkLab(h, 6, 8), hex = lab2hex(...lab);
@@ -3013,7 +3033,7 @@ function bkSelect(h, V, C) {
   $('bkNext').addEventListener('click', () => bkTurn(BOOK.i + bkStep(), 'next'));
   $('bkBook').addEventListener('click', e => {
     const o = e.target.closest('.bk-opp'); if (o) { bkTurn(+o.dataset.go); return; }
-    const b = e.target.closest('.bk-chipb'); if (b) bkSelect(+b.dataset.h, +b.dataset.v, +b.dataset.c);
+    const b = e.target.closest('.bk-grid .bk-chipb'); if (b) bkSelect(+b.dataset.h, +b.dataset.v, +b.dataset.c);
   });
   $('bkLoad').addEventListener('click', () => { if (!BOOK.rec) return; if ($('bookCard').classList.contains('full')) bkFull(false);
     state.mix = { ...BOOK.rec.parts }; renderIngredients(); renderPalette(); update();
