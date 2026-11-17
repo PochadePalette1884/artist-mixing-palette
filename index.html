@@ -641,7 +641,8 @@ html,body{overflow-x:clip} body{margin:0}
 
   <section class="card mapc" id="mapCard" aria-label="Map the mixes" hidden>
     <div class="card-head"><h2>Map the mixes</h2><div class="mp-acts"><button class="x" id="mpPrint" type="button" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Print key</button><button class="x" id="mpClose" type="button" aria-label="Close the map">×</button></div></div>
-    <div class="mp-ctl"><label class="mp-n" for="mpN">Locations <input type="range" id="mpN" min="10" max="20" step="1" value="14"> <span class="mono" id="mpNLab">14</span></label><span class="mp-msg" id="mpMsg"></span></div>
+    <div class="mp-ctl"><label class="mp-n" for="mpN">Locations <input type="range" id="mpN" min="10" max="20" step="1" value="14"> <span class="mono" id="mpNLab">14</span></label><label class="mp-n" for="mpSrc">Paints from <select id="mpSrc"><option value="lib">the 31-paint library</option><option value="pal">your selected palette</option></select></label><span class="mp-msg" id="mpMsg"></span></div>
+    <p class="mp-mem mp-hint">Tap the picture to add a location of your own, such as a cheek, a knuckle or the shadow side of a collar. <button class="linkbtn" id="mpAdded" type="button" hidden>Clear added locations</button></p>
     <div class="mp-pal" id="mpPal"></div>
     <div class="mp-fig" id="mpFig"><div class="mp-imgbox"><img id="mpImg" alt="Your piece with its mix locations marked"><div class="mp-pins" id="mpPins"></div></div><div class="mp-tip" id="mpTip" hidden></div></div>
     <p class="mp-mem" id="mpMem" hidden>With a free account, hovering a location also lights its spot on the Munsell tree, and you can print the key as a handout.</p>
@@ -755,10 +756,14 @@ html,body{overflow-x:clip} body{margin:0}
 .mp-fig{position:relative; width:fit-content; max-width:100%; margin:0 auto; line-height:0}
 .mp-imgbox{position:relative}
 .mp-imgbox > img{max-width:100%; max-height:72vh; width:auto; height:auto; border-radius:10px; display:block}
-.mp-pins{position:absolute; inset:0}
+.mp-pins{position:absolute; inset:0; pointer-events:none}
+.mp-pins .mp-pin{pointer-events:auto}
 .mp-pin{position:absolute; transform:translate(-50%,-50%); width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,.92); background:var(--c); color:#fff; font:700 .72rem/1 var(--body); text-shadow:0 0 3px rgba(0,0,0,.9); box-shadow:0 1px 4px rgba(0,0,0,.55); cursor:pointer; padding:0; opacity:.82; transition:transform .12s, opacity .12s}
 .mp-pin:hover, .mp-pin:focus-visible, .mp-pin.on{opacity:1; transform:translate(-50%,-50%) scale(1.35); z-index:2; outline:0}
 .mp-pin.far{border-style:dashed}
+.mp-pin.added{border-color:#e6c27a}
+.mp-imgbox > img{cursor:crosshair}
+#mpSrc{font:inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:4px 8px}
 .mp-tip{position:absolute; z-index:5; transform:translate(18px,-50%); display:flex; gap:10px; align-items:flex-start; width:max-content; max-width:min(340px, 70vw); background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:10px 12px; box-shadow:0 10px 26px rgba(0,0,0,.4); pointer-events:none; line-height:1.35}
 .mp-tip.left{transform:translate(calc(-100% - 18px),-50%)}
 .mp-tip.up{transform:translate(18px,-100%)}
@@ -2744,9 +2749,10 @@ $('mixToTree').addEventListener('click', () => {
 function syncMixToTree() { const b = $('mixToTree'); if (b) b.disabled = !Object.keys(state.mix).some(id => PIG[id] && state.mix[id] > 0); }
 /* ---------- Map the mixes: pin a painting's main colors and find the fewest paints that reach them ---------- */
 let LIBDB = null, MAPHL = null;
-function libDB() { // every one- and two-paint mix (with white steps) from the builder's library
-  if (LIBDB && LIBDB.white === PIG.tw.name) return LIBDB;
-  const ids = BUILD_IDS.filter(id => PIG[id]), bit = {}; ids.forEach((id, i) => bit[id] = 2 ** i);
+function libDB(pool) { // every one- and two-paint mix (with white steps) from a set of paints
+  const ids = [...new Set(['tw', ...pool])].filter(id => PIG[id]), key = ids.join(',') + '|' + PIG.tw.name;
+  if (LIBDB && LIBDB.key === key) return LIBDB;
+  const bit = {}; ids.forEach((id, i) => bit[id] = 2 ** i);
   const cols = ids.filter(i => i !== 'tw'), WS = [0, 0.15, 0.4, 1, 2.5, 6, 15], RS = [1 / 8, 1 / 4, 3 / 8, 1 / 2, 5 / 8, 3 / 4, 7 / 8], db = [];
   const push = parts => { let m = 0; for (const id in parts) m += bit[id]; db.push({ parts, lab: labOfParts(parts), mask: m }); };
   for (const w of WS) {
@@ -2754,10 +2760,10 @@ function libDB() { // every one- and two-paint mix (with white steps) from the b
     for (let i = 0; i < cols.length; i++) for (let j = i + 1; j < cols.length; j++) for (const t of RS) { const q = { [cols[i]]: t, [cols[j]]: 1 - t }; if (w) q.tw = w; push(q); }
   }
   push({ tw: 1 });
-  db.bit = bit; db.white = PIG.tw.name; return LIBDB = db;
+  db.bit = bit; db.ids = ids; db.key = key; return LIBDB = db;
 }
 var MAP = {
-  pending: false, pins: [], set: [], key: '',
+  pending: false, pins: [], auto: [], added: [], set: [], key: '',
   members() { return !STUDIO.on || !!STUDIO.user; },
   start() { // from the painting bar
     if (!PT.dense.length) { this.pending = true; $('ptFile').click(); return; }
@@ -2776,40 +2782,49 @@ var MAP = {
     clearTimeout(this.t); this.t = setTimeout(() => { try { this.compute(); this.draw(); } catch (e) { console.error(e); $('mpMsg').textContent = 'Something went wrong mapping this piece.'; } }, 30);
   },
   compute() {
-    const K = +$('mpN').value, S = 45, rnd = mulberry(20261117);
+    const K = +$('mpN').value, S = 30, rnd = mulberry(20261117);
     const pts = PT.base.map(s => ({ f: [s.m.lab[0], s.m.lab[1], s.m.lab[2], s.x * S, s.y * S], s }));
+    // weight rare colors up: a face, a white collar or a red chair matter as much as a large dark background
+    const bin = f => Math.round(f[0] / 7) + ',' + Math.round(f[1] / 7) + ',' + Math.round(f[2] / 7), cnt = {};
+    pts.forEach(p => { p.b = bin(p.f); cnt[p.b] = (cnt[p.b] || 0) + 1; });
+    pts.forEach(p => { p.w = Math.pow(cnt[p.b], -0.7); });
     const d2 = (a, b) => { let t = 0; for (let i = 0; i < 5; i++) { const d = a[i] - b[i]; t += d * d; } return t; };
     // k-means++ start, then k-means on color plus position, so light and shadow sides get pins of their own
     const C = [pts[Math.floor(rnd() * pts.length)].f.slice()];
-    while (C.length < K) { const D = pts.map(p => Math.min(...C.map(c => d2(p.f, c)))), tot = D.reduce((a, b) => a + b, 0); let r = rnd() * tot, i = 0; while (r > D[i] && i < D.length - 1) r -= D[i++]; C.push(pts[i].f.slice()); }
+    while (C.length < K) { const D = pts.map(p => p.w * Math.min(...C.map(c => d2(p.f, c)))), tot = D.reduce((a, b) => a + b, 0); let r = rnd() * tot, i = 0; while (r > D[i] && i < D.length - 1) r -= D[i++]; C.push(pts[i].f.slice()); }
     let asg = new Int32Array(pts.length);
     for (let it = 0; it < 18; it++) {
       pts.forEach((p, i) => { let b = 0, bd = Infinity; C.forEach((c, k) => { const d = d2(p.f, c); if (d < bd) { bd = d; b = k; } }); asg[i] = b; });
-      const sum = C.map(() => [0, 0, 0, 0, 0, 0]); pts.forEach((p, i) => { const s = sum[asg[i]]; for (let j = 0; j < 5; j++) s[j] += p.f[j]; s[5]++; });
+      const sum = C.map(() => [0, 0, 0, 0, 0, 0]); pts.forEach((p, i) => { const s = sum[asg[i]]; for (let j = 0; j < 5; j++) s[j] += p.w * p.f[j]; s[5] += p.w; });
       sum.forEach((s, k) => { if (s[5]) for (let j = 0; j < 5; j++) C[k][j] = s[j] / s[5]; });
     }
     const groups = C.map((c, k) => ({ c, mem: pts.filter((_, i) => asg[i] === k) })).filter(g => g.mem.length).sort((a, b) => b.mem.length - a.mem.length);
-    this.pins = groups.map((g, i) => {
+    this.auto = groups.map((g, i) => {
       let rep = g.mem[0], bd = Infinity; g.mem.forEach(p => { const d = d2(p.f, g.c); if (d < bd) { bd = d; rep = p; } });
       const lab = g.c.slice(0, 3);
       return { n: i + 1, lab, x: rep.s.x, y: rep.s.y, share: g.mem.length / pts.length, hex: lab2hex(...lab), m: { lab, ...munsellOfLabExact(lab) } };
     });
-    // the fewest paints from the library that reach every pin: add the paint that helps most, then drop any that isn't needed
-    const db = libDB(), bit = db.bit, CAP = 12, GOOD = 3.5;
+    this.choose();
+  },
+  choose() {
+    this.pins = this.auto.concat(this.added); this.pins.forEach((q, i) => q.n = i + 1);
+    const pool = $('mpSrc').value === 'pal' ? active() : BUILD_IDS;
+    // the fewest paints from the pool that reach every location: add the paint that helps most, then drop any that isn't needed
+    const db = libDB(pool), bit = db.bit, CAP = 12, GOOD = 3;
     const lists = this.pins.map(p => db.map((m, i) => [i, dE00(m.lab, p.lab)]).filter(x => x[1] < CAP).sort((a, b) => a[1] - b[1]).slice(0, 600));
     const evalSet = mask => { let sum = 0, worst = 0; lists.forEach(L => { let e = CAP; for (const [i, d] of L) if ((db[i].mask & ~mask) === 0) { e = d; break; } sum += e; worst = Math.max(worst, e); }); return { sum, worst }; };
     // each pin only needs to get as close as the whole library allows (very dark photo blacks lie beyond any paint)
     const firstFit = (L, mask) => { for (const [i, d] of L) if ((db[i].mask & ~mask) === 0) return d; return CAP; };
     const allMask = Object.values(bit).reduce((a, b) => a + b, 0), goal = lists.map(L => Math.max(GOOD, firstFit(L, allMask) + 1.5));
     const short = mask => lists.reduce((s, L, k) => s + Math.max(0, firstFit(L, mask) - goal[k]), 0); // how far the set falls short
-    const ids = BUILD_IDS.filter(id => PIG[id] && id !== 'tw'); let mask = bit.tw, cur = short(mask), chosen = [];
+    const ids = db.ids.filter(id => id !== 'tw'); let mask = bit.tw, cur = short(mask), chosen = [];
     while (chosen.length < 12 && cur > 0.01) {
       let best = null; for (const id of ids) { if (chosen.includes(id)) continue; const s = short(mask | bit[id]); if (!best || s < best.s || (s === best.s && evalSet(mask | bit[id]).sum < evalSet(mask | bit[best.id]).sum)) best = { id, s }; }
       if (!best || cur - best.s < 0.05) break;
       chosen.push(best.id); mask |= bit[best.id]; cur = best.s;
     }
     for (const id of chosen.slice().reverse()) { const m2 = mask & ~bit[id]; if (short(m2) <= cur + 0.01) { mask = m2; chosen.splice(chosen.indexOf(id), 1); } }
-    this.set = BUILD_IDS.filter(id => id === 'tw' || chosen.includes(id)); // library order
+    this.set = db.ids.filter(id => id === 'tw' || chosen.includes(id)); // pool order
     const allowed = new Set(this.set), sub = db.filter(m => (m.mask & ~mask) === 0);
     this.pins.forEach(p => { p.rec = findRecipe(p.lab, allowed, sub); p.mixHex = p.rec ? hexOf(p.rec.parts) : null; });
   },
@@ -2818,10 +2833,12 @@ var MAP = {
     const far = pins.filter(p => !p.rec || p.rec.dE > 6).length;
     $('mpMsg').textContent = `${pins.length} locations, numbered from the largest area to the smallest.` + (far ? ` ${far} sit${far === 1 ? 's' : ''} outside what these paints can reach.` : '');
     const n = this.set.length;
-    $('mpPal').innerHTML = `<p class="mp-need">Paints for this piece <b>(${n})</b>:</p><div class="mp-paints">` +
+    const from = $('mpSrc').value === 'pal' ? ` from ${esc(PALETTES[state.palette] ? PALETTES[state.palette].name : 'your palette')}` : '';
+    $('mpAdded').hidden = !this.added.length;
+    $('mpPal').innerHTML = `<p class="mp-need">Paints for this piece${from} <b>(${n})</b>:</p><div class="mp-paints">` +
       this.set.map(id => `<span class="mp-paint"><img src="${anyDab(id)}" alt=""><span>${esc(PIG[id].name)}</span></span>`).join('') +
       `</div><button class="linkbtn" id="mpUse" type="button">Use these paints</button>`;
-    $('mpPins').innerHTML = pins.map(p => `<button class="mp-pin${p.rec && p.rec.dE > 6 ? ' far' : ''}" type="button" data-pin="${p.n - 1}" style="left:${(p.x * 100).toFixed(2)}%;top:${(p.y * 100).toFixed(2)}%;--c:${p.hex}" aria-label="Location ${p.n}, ${esc(munsellText(p.m))}">${p.n}</button>`).join('');
+    $('mpPins').innerHTML = pins.map(p => `<button class="mp-pin${p.rec && p.rec.dE > 6 ? ' far' : ''}${p.added ? ' added' : ''}" type="button" data-pin="${p.n - 1}" style="left:${(p.x * 100).toFixed(2)}%;top:${(p.y * 100).toFixed(2)}%;--c:${p.hex}" aria-label="Location ${p.n}, ${esc(munsellText(p.m))}">${p.n}</button>`).join('');
     $('mpList').innerHTML = pins.map(p => `<li data-pin="${p.n - 1}"><span class="mp-no">${p.n}</span><span class="mp-sw"><i style="background:${p.hex}" title="In the piece"></i><i style="background:${p.mixHex || p.hex}" title="The mix"></i></span><span class="mp-txt"><b class="mono">${esc(munsellText(p.m))}</b><span>${p.rec ? esc(recipeText(p.rec.parts)) : 'No mix found'}</span></span><span class="mp-de mono ${p.rec && p.rec.dE < 3 ? 'fit-good' : p.rec && p.rec.dE < 6 ? 'fit-ok' : 'fit-far'}">${p.rec ? 'ΔE ' + p.rec.dE.toFixed(1) : ''}</span></li>`).join('');
   },
   tip(i, el) {
@@ -2864,6 +2881,17 @@ var MAP = {
     $('ptMap').addEventListener('click', () => this.start());
     $('mpClose').addEventListener('click', () => this.close());
     $('mpPrint').addEventListener('click', () => this.print());
+    $('mpSrc').addEventListener('change', () => { this.choose(); this.draw(); });
+    $('mpAdded').addEventListener('click', () => { this.added = []; this.choose(); this.draw(); });
+    $('mpImg').addEventListener('click', e => { // tap the picture to add a location of your own
+      if (this.added.length >= 12) return;
+      const r = $('mpImg').getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      let near = PT.base.filter(s => Math.hypot(s.x - x, (s.y - y) * (r.height / r.width)) < 0.018);
+      if (!near.length) { let b = null, bd = Infinity; PT.base.forEach(s => { const d = Math.hypot(s.x - x, s.y - y); if (d < bd) { bd = d; b = s; } }); near = [b]; }
+      const lab = [0, 1, 2].map(k => near.reduce((t, s) => t + s.m.lab[k], 0) / near.length);
+      this.added.push({ lab, x, y, share: near.length / PT.base.length, hex: lab2hex(...lab), m: { lab, ...munsellOfLabExact(lab) }, added: true });
+      this.choose(); this.draw(); this.tip(this.pins.length - 1);
+    });
     $('mpN').addEventListener('input', () => { $('mpNLab').textContent = $('mpN').value; clearTimeout(this.nt); this.nt = setTimeout(() => this.run(), 250); });
     const box = $('mapCard');
     box.addEventListener('mouseover', e => { const t = e.target.closest('[data-pin]'); if (t) this.tip(+t.dataset.pin, t); });
@@ -2928,6 +2956,7 @@ function setPalette(key) {
   if (!key.startsWith('__')) { try { localStorage.setItem('mmp-palette', key); } catch (er) {} }
   if (pal.custom) $('palNote').insertAdjacentHTML('beforeend', ' <button class="linkbtn pal-edit" id="palEdit">Edit this palette</button>');
   fitPainting(false);
+  if (typeof MAP !== 'undefined' && MAP && !$('mapCard').hidden && $('mpSrc').value === 'pal' && key !== '__map' && MAP.auto.length) { MAP.choose(); MAP.draw(); }
   renderPalette(); renderIngredients(); renderSelects(); update(); renderString();
 }
 SARGENT_DABS.rm = "data:image/webp;base64,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";
