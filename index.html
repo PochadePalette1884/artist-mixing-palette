@@ -3466,12 +3466,12 @@ function bkBigFill() { // the selected chip, shown large in the page's empty spa
     const s = BOOK.sel, h = +el.dataset.h;
     if (!s || s.h !== h) { el.innerHTML = ''; return; }
     const lab = s.C ? bkLab(h, s.V, s.C) : [munsellLofV(s.V), 0, 0], hex = lab2hex(...lab), nm = bkName(h);
-    el.innerHTML = `<div class="bk-pair"><span class="bk-chipb" style="background-color:${hex}" role="img" aria-label="${s.C ? nm.label + ' ' + s.V + '/' + s.C : 'N ' + s.V + '/'}"></span>${surfHTML(hex)}</div>`
+    el.innerHTML = `<span class="bk-chipb" style="background-color:${hex}" role="img" aria-label="${s.C ? nm.label + ' ' + s.V + '/' + s.C : 'N ' + s.V + '/'}"></span>`
       + `<b>${s.C ? `${nm.label} ${s.V}/${s.C}` : `N ${s.V}/`}</b><small>${s.C ? FAMNAMES[nm.fam].toLowerCase() + ' · value ' + s.V + ' · chroma ' + s.C : 'neutral · value ' + s.V}</small>`;
   });
-  // the sphere sits beside the large chip; where that chip isn't shown (phones, two-page spread) it moves below the details
-  const big = [...$('bkBook').querySelectorAll('.bk-big .sph')].find(x => x.offsetParent !== null), S = $('bkSurf');
-  if (S) { if (!big && BOOK.sel) { const s = BOOK.sel, lab = s.C ? bkLab(s.h, s.V, s.C) : [munsellLofV(s.V), 0, 0]; S.innerHTML = surfHTML(lab2hex(...lab)); S.hidden = false; } else { S.innerHTML = ''; S.hidden = true; } }
+  // the sphere always sits below the chip's details, leaving the page to the large chip and its reading
+  const S = $('bkSurf');
+  if (S) { if (BOOK.sel) { const s = BOOK.sel, lab = s.C ? bkLab(s.h, s.V, s.C) : [munsellLofV(s.V), 0, 0]; S.innerHTML = surfHTML(lab2hex(...lab)); S.hidden = false; } else { S.innerHTML = ''; S.hidden = true; } }
   surfDraw();
 }
 function renderBook() {
