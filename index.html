@@ -231,13 +231,27 @@ body.tree-full{overflow:hidden}
 .bk-body{display:grid; grid-template-columns:18px auto minmax(0,1fr); gap:6px}
 .bk-big{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:0 4% 26px; min-width:0}
 .bk-big:empty{visibility:hidden}
-.bk-big .bk-chipb{width:min(300px, 100%); aspect-ratio:4/5; cursor:default; box-shadow:0 1px 2px rgba(60,40,10,.35), 0 8px 22px rgba(60,40,10,.18)}
+.bk-big > .bk-chipb, .bk-pair .bk-chipb{width:min(300px, 100%); aspect-ratio:4/5; cursor:default; box-shadow:0 1px 2px rgba(60,40,10,.35), 0 8px 22px rgba(60,40,10,.18)}
 .bk-big .bk-chipb:hover{outline:0}
 .bk-big b{font-family:var(--display); font-size:1.7rem; font-weight:600; color:#2f2a20; line-height:1; letter-spacing:.01em}
 .bk-big small{font-family:var(--display); font-style:italic; font-size:.85rem; color:#6f6550; margin-top:-8px; text-align:center}
 .bk-book.spread .bk-big .bk-chipb{width:min(170px, 100%)}
 .bk-book.spread .bk-big b{font-size:1.25rem}
 @media (max-width:700px){ .bk-body{grid-template-columns:18px minmax(0,1fr)} .bk-big{display:none} }
+.bk-pair{display:flex; gap:18px; align-items:flex-start; justify-content:center; flex-wrap:wrap; width:100%}
+.bk-pair .bk-chipb{width:min(170px, 42%) !important; flex:none}
+.sph{width:min(250px, 100%); display:flex; flex-direction:column; gap:6px}
+.sph-cv{width:100%; aspect-ratio:5/4; border-radius:6px; display:block; box-shadow:0 1px 2px rgba(60,40,10,.35), 0 6px 16px rgba(60,40,10,.16)}
+.sph-r{width:100%; margin:4px 0 0; accent-color:#6f6550}
+.sph-lab{display:flex; justify-content:space-between; font-family:var(--display); font-style:italic; font-size:.8rem; color:#6f6550; margin-top:-4px}
+.sph-read{display:flex; flex-direction:column; gap:3px; font-size:.74rem; color:#2f2a20; font-family:var(--mono, monospace)}
+.sph-read span{display:flex; gap:6px; align-items:center}
+.sph-read b, .bk-big .sph-read b{font:600 .74rem/1.2 var(--body); color:inherit; min-width:62px; letter-spacing:0}
+.sph-read i{width:16px; height:12px; border-radius:2px; border:1px solid rgba(0,0,0,.2); flex:none}
+.bk-book.spread .bk-big .sph{display:none}
+.bk-surf{flex-basis:100%; display:flex; justify-content:flex-start; padding-top:6px}
+.bk-surf .sph-lab{color:var(--muted)} .bk-surf .sph-read{color:var(--ink)}
+.bk-surf .sph{width:min(300px, 100%)}
 .bk-vax{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-family:var(--display); font-size:.7rem; letter-spacing:.3em; color:#6f6550}
 .bk-vax span{writing-mode:vertical-rl; transform:rotate(180deg)}
 .bk-vax i, .bk-cax i{display:block; background:#8a7f68}
@@ -273,13 +287,18 @@ body.tree-full{overflow:hidden}
 .pk-info{display:flex; flex-direction:column; gap:12px; min-width:0}
 .pk-desc{font-size:.85rem; color:var(--muted)}
 .pk-recipe{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:7px}
-.pk-recipe li{display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:10px; align-items:center; font-size:.9rem}
+.pk-recipe li{display:grid; grid-template-columns:22px minmax(0,1fr) max-content; gap:10px; align-items:center; font-size:.9rem}
+.pk-recipe .pk-nm{min-width:0; line-height:1.25}
+.pk-recipe .pk-amt{white-space:nowrap; text-align:right}
 .pk-amt{font-size:.8rem; color:var(--muted); white-space:nowrap} .pk-amt b{color:var(--ink)}
 .btn{border:1px solid var(--line); background:var(--panel-2); border-radius:999px; padding:6px 14px; font-size:.84rem; cursor:pointer; align-self:flex-start}
 .btn:hover{border-color:var(--ink)}
 .btn.dim{opacity:.55}
 .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
 .card.full .picked{flex:none}
+/* at every width outside full view, the pick window sits in its own band below the tree: it never covers the colors, and opening it never moves the tree */
+body:not(.mode-inside) #treeCard:not(.full) .tree-wrap{display:flex; flex-direction:column; gap:14px}
+body:not(.mode-inside) #treeCard:not(.full) .picked{position:relative; left:auto; right:auto; top:auto; bottom:auto; order:1; box-shadow:none; background:var(--panel-2); max-height:none; overflow:visible}
 .card.full .picked{left:auto; right:12px; top:50%; bottom:auto; transform:translateY(-50%); width:min(460px, 100%); max-height:calc(100% - 24px); overflow:auto}
 .pk-big{display:none}
 .picked.enlarged{max-height:calc(100% - 12px); overflow:auto}
@@ -533,22 +552,22 @@ html,body{overflow-x:clip} body{margin:0}
         </div>
       </div>
       <div class="ings" id="ings"></div>
-      <div>
+      <div class="mix-more">
         <div class="label" style="margin-bottom:8px">Screen versus paint</div>
         <div class="compare">
           <div class="cmp"><span class="sw" id="rgbSw"></span><div>Averaged as light on a screen<br><span class="mono" id="rgbTxt"></span></div></div>
           <div class="cmp"><span class="sw" id="kmSw"></span><div>Mixed as pigment<br><span class="mono" id="kmTxt"></span></div></div>
         </div>
       </div>
-      <div>
+      <div class="mix-more">
         <div class="label" style="margin-bottom:8px">Same mix on every ground</div>
         <div class="strip" id="onGrounds" style="grid-template-columns:repeat(5,minmax(0,1fr))"></div>
       </div>
-      <div>
+      <div class="mix-more">
         <div class="label" style="margin-bottom:8px" id="tintLab">Adding Titanium White</div>
         <div class="strip" id="tints"></div>
       </div>
-      <div id="compBox" class="comp-row">
+      <div id="compBox" class="comp-row mix-more">
         <div class="comp-btns"><button class="btn" id="compLoad">Load complement</button><button class="btn" id="compPath">View path</button></div>
         <div class="comp-slide" id="compSlide" hidden>
           <div class="cs-row"><span class="cs-end" id="csA"></span><input type="range" id="csT" min="0" max="100" step="1" value="50" aria-label="Position between the mix and its complement"><span class="cs-end" id="csB"></span></div>
@@ -559,7 +578,7 @@ html,body{overflow-x:clip} body{margin:0}
     </section>
 
     <section class="card" id="treeCard" aria-label="Munsell tree">
-      <div class="card-head"><h2>Where it sits</h2><div style="display:flex;align-items:center;gap:12px"><span class="label">Value up · hue around · chroma out</span>
+      <div class="card-head"><h2>Where it sits</h2><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end"><div class="tmode" role="group" aria-label="What the tree shows"><button type="button" data-tm="palette" aria-pressed="true">Palette</button><button type="button" data-tm="painting" aria-pressed="false" disabled title="Add a painting to see its colors">Painting</button></div><span class="label tm-axes">Value up · hue around · chroma out</span>
         <button class="fsbtn" id="fsBtn" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path id="fsIcon" d="M3 8V3h5M12 3h5v5M17 12v5h-5M8 17H3v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>
       <div class="brush" id="brushBox" hidden>
         <div class="br-stage"><div class="br-frame" id="brFrame"><img id="brImg" alt="Your painting. Brush over an area to see only its colors on the tree."><canvas id="brCv" aria-hidden="true"></canvas></div></div>
@@ -595,7 +614,7 @@ html,body{overflow-x:clip} body{margin:0}
       </div>
       </div>
       <p class="tree-hint" id="insideHint">Tap any chip to see where it is in the painting and its closest mix. Drag to look around. Zoom with a pinch or Ctrl + scroll, or with the mouse wheel in full view.</p>
-      <p class="tree-hint" id="treeHint"><span id="hintLead">Tap any color on the tree to see its mix.</span> Drag to turn. Zoom with + and −, a pinch, or Ctrl + scroll (the mouse wheel zooms in full view), and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</p>
+      <p class="tree-hint" id="treeHint"><span id="hintLead">Tap any color on the tree to see its mix.</span> <button type="button" class="hint-q" id="hintQ" aria-expanded="false" aria-controls="hintMore" title="How to move the tree">?</button><span class="hint-more" id="hintMore" hidden> Drag to turn. Zoom with + and −, a pinch, or Ctrl + scroll (the mouse wheel zooms in full view), and double-click to zoom into a spot. When zoomed, Shift-drag or two fingers move it around.</span></p>
       <div class="tree-mode">
         <span class="label">Add a painting</span>
         <div class="pt-bar" id="ptBar">
@@ -696,6 +715,7 @@ html,body{overflow-x:clip} body{margin:0}
       <div class="sw" id="bkSw"></div>
       <div class="tx"><span class="nt" id="bkNt"></span><span class="rc" id="bkDesc"></span><span class="rc" id="bkRec"></span>
         <div><button class="linkbtn" id="bkLoad" type="button">Load this mix</button></div></div>
+      <div class="bk-surf" id="bkSurf" hidden></div>
     </div>
     <p class="hint" style="margin:0">Each page holds one hue, with value rising from 1 to 9 and chroma stepping out by 2 from the neutral. The chips are converted from the Munsell renotation data (the 1943 measurements behind modern Munsell books), and a page shows only what a screen can display; the colors are a guide, not a substitute for a physical Munsell book.</p>
   </section>
@@ -744,6 +764,20 @@ html,body{overflow-x:clip} body{margin:0}
 </dialog>
 
 <style id="studio-css">
+.pk-desc{text-wrap:balance}
+.hint-q{width:20px; height:20px; border-radius:50%; border:1px solid var(--line); background:none; color:var(--muted); font:600 .72rem/1 var(--body); cursor:pointer; padding:0; vertical-align:1px; margin-left:4px}
+.hint-q:hover, .hint-q[aria-expanded="true"]{border-color:var(--ink); color:var(--ink)}
+body.mix-empty .mix-more{display:none}
+body.mix-empty .hvc{display:none}
+.tmode{display:inline-flex; border:1px solid var(--line); border-radius:999px; padding:2px; gap:2px}
+.tmode button{font:600 .76rem var(--body); letter-spacing:.04em; color:var(--muted); background:none; border:0; border-radius:999px; padding:5px 12px; cursor:pointer}
+.tmode button[aria-pressed="true"]{background:var(--ink); color:#2a261f}
+.tmode button:disabled{opacity:.4; cursor:default}
+.tmode button:focus-visible{outline:2px solid var(--ink); outline-offset:1px}
+@media (max-width:1499px){ .tm-axes{display:none} }
+.reveal-glow{animation:revealGlow 1.5s ease-out}
+@keyframes revealGlow{0%,25%{box-shadow:0 0 0 3px rgba(230,194,122,.85)} 100%{box-shadow:0 0 0 3px rgba(230,194,122,0)}}
+@media (prefers-reduced-motion: reduce){ .reveal-glow{animation:none} }
 .mapc .mp-acts{display:flex; gap:8px; align-items:center}
 .mp-ctl{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; font-size:.86rem; color:var(--muted)}
 .mp-n{display:flex; align-items:center; gap:8px}
@@ -762,6 +796,9 @@ html,body{overflow-x:clip} body{margin:0}
 .mp-pin:hover, .mp-pin:focus-visible, .mp-pin.on{opacity:1; transform:translate(-50%,-50%) scale(1.35); z-index:2; outline:0}
 .mp-pin.far{border-style:dashed}
 .mp-pin.added{border-color:#e6c27a}
+.board.flash{animation:boardFlash 1.6s ease-out}
+@keyframes boardFlash{0%,30%{box-shadow:0 0 0 3px #e6c27a} 100%{box-shadow:0 0 0 3px rgba(230,194,122,0)}}
+@media (prefers-reduced-motion: reduce){ .board.flash{animation:none; box-shadow:0 0 0 3px #e6c27a} }
 .mp-pins.dense .mp-pin{width:21px; height:21px; font-size:.62rem; border-width:1.5px}
 .mp-imgbox > img{cursor:crosshair}
 #mpSrc{font:inherit; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:4px 8px}
@@ -969,15 +1006,12 @@ body:not(.mode-painting) #insideBtn{display:none}
   #treeCard:not(.full) .tree-wrap canvas{aspect-ratio:1 / 0.8}
   .wrap > .board .dabs{grid-template-columns:repeat(auto-fit, minmax(96px, 1fr)); gap:18px 10px}
   .wrap > .board .dab .nm{font-size:.8rem; max-width:110px}
-  /* the pick window sits in its own band above the tree, so it never covers the colors */
-  body:not(.mode-inside) #treeCard:not(.full) .tree-wrap{display:flex; flex-direction:column; gap:14px}
-  body:not(.mode-inside) #treeCard:not(.full) .picked{position:relative; left:auto; right:auto; top:auto; bottom:auto; order:-1; box-shadow:none; background:var(--panel-2); padding:14px 16px; max-height:none; overflow:visible}
-  body:not(.mode-inside) #treeCard:not(.full) .zoomctl{top:auto; bottom:10px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked{padding:14px 16px}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-body{grid-template-columns:auto minmax(0,1fr); gap:20px; align-items:stretch}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-left{flex-direction:row; gap:12px; align-items:stretch}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-sw{width:150px; min-height:128px}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-where{width:200px; align-self:center}
-  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info{display:grid; grid-template-columns:minmax(230px,.6fr) minmax(0,1fr); grid-template-rows:auto 1fr; column-gap:28px; row-gap:10px; padding-right:84px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info{display:grid; grid-template-columns:minmax(210px,1fr) minmax(290px,1.15fr); grid-template-rows:auto 1fr; column-gap:28px; row-gap:10px; padding-right:84px}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > div:first-child{grid-column:1; grid-row:1}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > .pk-acts{grid-column:1; grid-row:2; align-self:end; justify-self:start}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > .pk-compmsg{grid-column:1 / -1; grid-row:3}
@@ -1259,6 +1293,13 @@ const state = { mix: {}, strA: 'ac', strB: 'um', tree: 'palette', palette: 'klei
 try { const s = localStorage.getItem('mmp-cloud'); if (s !== null) state.cloud = s === '1'; const stv = localStorage.getItem('mmp-style'); if (stv === 'lines' || stv === 'squares') state.cloudStyle = stv; const nmv = localStorage.getItem('mmp-names'); if (nmv !== null) state.names = nmv === '1'; const c = localStorage.getItem('mmp-cloudsrc'); if (c === 'mix' || c === 'palette') state.cloudSrc = c; } catch (e) {}
 
 const $ = id => document.getElementById(id);
+// one rule for moving the page: only scroll when the thing you need is out of view; if it's already on screen, just make it glow
+function reveal(el, block = 'start') {
+  if (!el) return;
+  const r = el.getBoundingClientRect(), vh = innerHeight, seen = Math.min(r.bottom, vh) - Math.max(r.top, 0), onScreen = seen >= Math.min(r.height, vh) * 0.45;
+  if (!onScreen) el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block });
+  el.classList.remove('reveal-glow'); void el.offsetWidth; el.classList.add('reveal-glow');
+}
 // ---- Members: free account (Supabase email + password) opens the palette builder and the Studio videos.
 // Runs only on the public site; inside claude.ai previews everything stays open.
 const SB_URL = 'https://kuwtznrchpybueorrjqp.supabase.co';
@@ -1583,7 +1624,10 @@ function renderPalette() {
 /* ---------- mixer ---------- */
 function renderIngredients() {
   const ids = Object.keys(state.mix); if (typeof syncMixToTree === 'function') syncMixToTree();
-  if (!ids.length) { $('ings').innerHTML = '<p class="hint">The mix is empty. Tap a pigment on the palette to start.</p>'; return; }
+  document.body.classList.toggle('mix-empty', !ids.length);
+  if (!ids.length) { const st = starterPair();
+    $('ings').innerHTML = '<p class="hint">The mix is empty. Tap a paint on the palette to start' + (st ? `, or begin where color mixing begins: <button class="linkbtn" id="mixStarter" type="button">50% ${PIG[st[0]].name} + 50% ${PIG[st[1]].name}</button>` : '') + '.</p>';
+    return; }
   $('ings').innerHTML = ids.map(id => `<div class="ing">
     <span class="chip${id === 'og' ? ' clear-chip' : ''}" style="${chipBg(id)}"></span>
     <span class="nm">${nameOf(id)}${id === 'og' ? ' <span class="mono" style="font-size:.7rem;color:var(--muted)">medium</span>' : ''}</span>
@@ -1591,6 +1635,16 @@ function renderIngredients() {
     <span class="amt" id="amt-${id}"></span>
     <button class="x" data-rm="${id}" aria-label="Remove ${nameOf(id)}">×</button></div>`).join('');
 }
+function starterPair() { // the palette's truest red and truest blue, for the classic two-paint start
+  const ids = active().filter(id => id !== 'tw' && PIG[id]); if (ids.length < 2) return null;
+  const pick = (target, not) => { let best = null, bd = Infinity;
+    ids.forEach(id => { if (id === not) return; const a = analyze(mixR({ [id]: 1 })), m = munsellOfLabExact(a.lab); if (m.chroma < 4 || m.V > 5.5) return; // a deep, strong paint, not a tint
+      const d = Math.min(Math.abs(m.hue - target), 100 - Math.abs(m.hue - target)); if (d > 12) return;
+      const s = d - m.chroma * 0.1; if (s < bd) { bd = s; best = id; } });
+    return best; };
+  const r = pick(2.5), b = pick(77.5, r); return r && b ? [r, b] : null; // a crimson-leaning red and an ultramarine-leaning blue
+}
+document.addEventListener('click', e => { if (e.target.id === 'mixStarter') { const st = starterPair(); if (st) { state.mix = { [st[0]]: 1, [st[1]]: 1 }; renderIngredients(); renderPalette(); update(); } } });
 function update() {
   const ids = Object.keys(state.mix);
   const total = ids.reduce((s, id) => s + state.mix[id], 0);
@@ -1909,7 +1963,7 @@ function render() {
   const cs = getComputedStyle(document.documentElement), mono = cs.getPropertyValue('--mono');
   const ink = cs.getPropertyValue('--ink').trim(), line = cs.getPropertyValue('--line').trim(), muted = cs.getPropertyValue('--muted').trim(), accent = cs.getPropertyValue('--accent').trim();
   const Z = VIEW.zoom, G = 1 + (Z - 1) * 0.35; // marks grow a little as you zoom, positions spread fully
-  const FULL = cv.closest('.full') !== null, ROOMY = FULL || W > H * 1.1, B = Math.min(W, H / (ROOMY ? 1.0 : 1.12)), S = B * (ROOMY ? 0.4 : B < 420 ? 0.36 : 0.33) * Z, cx = treeCX(W) + VIEW.px, cy = H * 0.5 + VIEW.py;
+  const FULL = cv.closest('.full') !== null, ROOMY = FULL || W > H * 1.1, B = Math.min(W, H / (ROOMY ? 1.0 : 1.12)), S = B * (ROOMY ? 0.4 : B < 420 ? 0.36 : 0.33) * Z, cx = treeCX(W) + VIEW.px, cy = H * (FULL ? 0.5 : 0.46) + VIEW.py;
   // perspective flattens out as the view nears straight down, so the top view reads like a true chroma chart:
   // a colour's distance from the trunk then matches the chroma rings whatever its value
   const topness = Math.max(0, (Math.abs(Math.sin(VIEW.pitch)) - 0.8) / 0.2), D = 3.4 + 60 * topness * topness;
@@ -2319,6 +2373,7 @@ function findRecipe(target, allowedSet, db) {
     if (!res || r.dE < res.dE) res = r;
     if (r.dE <= Math.max(exact + 1.2, 2.5)) { res = r; break; } // within what reads as the same color
   }
+  if (res && Object.values(res.parts).some(v => v % 1)) for (const id in res.parts) res.parts[id] *= 2; // whole parts read better than halves
   return res;
 }
 /* ---------- pick a color on the tree ---------- */
@@ -2346,6 +2401,10 @@ function pickAt(x, y) {
 }
 function showPick(pk, msg) {
   const box = $('picked');
+  setTimeout(() => { // the window opens below the tree; if it lands off the bottom of the screen, bring its top into view
+    if (!pk || box.hidden || $('treeCard').classList.contains('full') || document.body.classList.contains('mode-inside')) return;
+    const r = box.getBoundingClientRect(); if (r.top > innerHeight - 160) scrollBy({ top: r.top - innerHeight + Math.min(r.height + 24, innerHeight * 0.6), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }, 30);
   if (COMPPATH && COMPPATH.pick && COMPPATH.pick !== pk) clearPickComp(); else if (!COMPPATH || !COMPPATH.pick) resetPickCompUI();
   $('pkComp').hidden = !pk; $('pkBrush').hidden = !(pk && pk.px);
   if (!pk) { if (msg) { box.hidden = false; $('pkBody').hidden = true; $('pkMsg').hidden = false; $('pkMsg').textContent = msg; } else box.hidden = true; return; }
@@ -2736,7 +2795,7 @@ $('pkBigImg').addEventListener('click', e => {
 });
 $('pkComp').addEventListener('click', viewPickComp);
 $('pkLoad').addEventListener('click', () => { if (!PICK.cur || !PICK.cur.parts) return; state.mix = { ...PICK.cur.parts }; renderIngredients(); renderPalette(); update();
-  if (!document.getElementById('treeCard').classList.contains('full')) { const mc = document.querySelector('[aria-label="Mixer"]'); if (mc) mc.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); } });
+  if (!document.getElementById('treeCard').classList.contains('full')) reveal(document.querySelector('[aria-label="Mixer"]')); });
 // the other direction: send the current mix to Where it sits, opened in the same window a tree pick uses
 $('mixToTree').addEventListener('click', () => {
   const parts = {}; for (const id in state.mix) if (PIG[id] && state.mix[id] > 0) parts[id] = state.mix[id];
@@ -2746,7 +2805,7 @@ $('mixToTree').addEventListener('click', () => {
   PICK.cur = { parts: { ...parts }, a, p: pt3(a), fromMix: true }; showPick(PICK.cur);
   document.querySelector('#picked .label').textContent = 'Your mix, on the tree';
   render();
-  const tc = $('treeCard'); if (!tc.classList.contains('full')) tc.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  const tc = $('treeCard'); if (!tc.classList.contains('full')) reveal(tc);
 });
 function syncMixToTree() { const b = $('mixToTree'); if (b) b.disabled = !Object.keys(state.mix).some(id => PIG[id] && state.mix[id] > 0); }
 /* ---------- Map the mixes: pin a painting's main colors and find the fewest paints that reach them ---------- */
@@ -2776,7 +2835,7 @@ var MAP = {
     $('mpImg').src = PT.big || PT.thumb;
     $('mpMem').hidden = this.members();
     this.run();
-    $('mapCard').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    reveal($('mapCard'));
   },
   close() { $('mapCard').hidden = true; document.body.classList.remove('mapping'); this.hl(null); },
   run() {
@@ -2859,15 +2918,23 @@ var MAP = {
     MAPHL = p && this.members() ? { p: pt3(p.m), hex: p.hex, n: p.n } : null; render();
   },
   usePaints() {
-    PALETTES.__map = { group: 'draft', name: 'Paints for this piece', dates: 'map', ids: this.set.slice(), white: 'titanium',
+    PALETTES.__map = { group: 'draft', name: 'Paints for this piece', dates: '', ids: this.set.slice(), white: 'titanium',
       dabs: Object.fromEntries(this.set.map(id => [id, anyDab(id)])), note: 'The fewest paints from the library that reach every mapped location in your piece. Save them as your own palette in the palette builder.' };
     setPalette('__map');
+  },
+  usePaintsGo() { // from the button: switch, then take you to the board so you see it happen
+    this.usePaints();
+    $('palNote').insertAdjacentHTML('beforeend', ' <button class="linkbtn" id="mpBack" type="button">Back to the map</button>');
+    $('mpBack').addEventListener('click', () => $('mapCard').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    const u = $('mpUse'); if (u) { u.textContent = 'On your board ✓'; }
+    const bd = document.querySelector('.board'); reveal($('palList'));
+    bd.classList.remove('flash'); void bd.offsetWidth; bd.classList.add('flash');
   },
   load(i) {
     const p = this.pins[i]; if (!p || !p.rec) return;
     if (!Object.keys(p.rec.parts).every(id => active().includes(id))) this.usePaints();
     state.mix = { ...p.rec.parts }; renderIngredients(); renderPalette(); update();
-    const mc = document.querySelector('[aria-label="Mixer"]'); if (mc && innerWidth < 1500) mc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    reveal(document.querySelector('[aria-label="Mixer"]'));
   },
   print() {
     if (!STUDIO.allow(() => this.print(), 'Sign in to print the key for this piece.')) return;
@@ -2902,7 +2969,7 @@ var MAP = {
     $('mpFig').addEventListener('mouseleave', () => { $('mpTip').hidden = true; });
     box.addEventListener('focusin', e => { const t = e.target.closest('.mp-pin'); if (t) this.tip(+t.dataset.pin, t); });
     box.addEventListener('click', e => {
-      if (e.target.closest('#mpUse')) { this.usePaints(); return; }
+      if (e.target.closest('#mpUse')) { this.usePaintsGo(); return; }
       const t = e.target.closest('[data-pin]'); if (t) { this.tip(+t.dataset.pin, t); this.load(+t.dataset.pin); }
     });
   }
@@ -2926,6 +2993,7 @@ function renderPalLists() {
   // the painting bar: switch the tree between the painting and the selected palette
   const bb = $('ptBrush'); if (bb) bb.hidden = !PT.thumb;
   const v = $('ptView'); if (v) { v.hidden = !PT.thumb; v.textContent = state.tree === 'painting' ? 'Show palette' : 'Show painting'; }
+  syncTreeMode();
 }
 function setTreeMode(m) {
   if (ANIM.on) stopAnim();
@@ -2936,7 +3004,18 @@ function setTreeMode(m) {
   $('cloudLab').textContent = m === 'painting' ? 'Painting colors' : 'Reachable colors';
   $('hintLead').textContent = m === 'painting' ? 'Tap any color on the tree to see where it is in the painting.' : 'Tap any color on the tree to see its mix.';
   PICK.cur = null; showPick(null); cloudCache = null; dense.key = ''; drawWheel();
+  syncTreeMode();
 }
+$('hintQ').addEventListener('click', () => { const m = $('hintMore'), open = m.hidden; m.hidden = !open; $('hintQ').setAttribute('aria-expanded', String(open)); });
+function syncTreeMode() { // the Palette | Painting switch in the tree's header always says what the tree is showing
+  document.querySelectorAll('.tmode [data-tm]').forEach(b => {
+    b.setAttribute('aria-pressed', String((b.dataset.tm === 'painting') === isPainting()));
+    if (b.dataset.tm === 'painting') { b.disabled = !PT.thumb; b.title = PT.thumb ? 'Show the painting’s colors' : 'Add a painting to see its colors'; }
+    else b.title = 'Show what ' + (PALETTES[state.palette] ? PALETTES[state.palette].name : 'your palette') + ' can mix';
+  });
+}
+document.addEventListener('click', e => { const b = e.target.closest('.tmode [data-tm]'); if (b && !b.disabled && (b.dataset.tm === 'painting') !== isPainting()) setTreeMode(b.dataset.tm); });
+syncTreeMode();
 $('ptView').addEventListener('click', () => setTreeMode(isPainting() ? 'palette' : 'painting'));
 $('ptFile').addEventListener('change', e => { if (e.target.files[0]) { if (!isPainting()) setTreeMode('painting'); loadPainting(e.target.files[0]); } e.target.value = ''; });
 (() => { const card = $('treeCard'), bar = $('ptBar');
@@ -3091,7 +3170,7 @@ const BUILDER = {
     this.name = editing ? PALETTES['u_' + editKey].name : '';
     $('bdName').value = this.name; $('bdDelete').hidden = !this.editKey; $('bdMsg').textContent = '';
     $('builder').hidden = false; document.body.classList.add('building'); this.renderLib(); this.apply();
-    $('builder').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    reveal($('builder'));
   },
   close(restore = true) {
     $('builder').hidden = true; document.body.classList.remove('building'); delete PALETTES.__draft;
@@ -3247,14 +3326,153 @@ function bkPageHTML(i) {
     <div class="bk-meta"><span class="pg">page ${i + 1} of 40<br>opposite <button class="bk-opp" data-go="${opp}">${bkName(BK_HUES[opp]).label}</button></span>${bkLocator(h)}</div></div>
     <div class="bk-body"><div class="bk-vax"><i class="up"></i><span>VALUE</span></div><div>${g}<div class="bk-cax"><span>CHROMA</span><i class="rt"></i></div></div><div class="bk-big" data-h="${h}" aria-live="polite"></div></div></div>`;
 }
+/* ---------- Surface: the chosen chip as a sphere, from matte through glossy to mirror ---------- */
+const SURF = { t: 0.5 }; // starts at glossy
+const surfLin = c => c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+const surfEnc = v => { v = v > 0.8 ? 0.8 + 0.2 * (1 - Math.exp(-(v - 0.8) / 0.2)) : Math.max(0, v); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055)); };
+function surfParams(t) {
+  if (t > 0.5) t = 0.5 + (t - 0.5) * 0.8; // the mirror end stops just short of a perfect chrome, which looked cartoonish
+  const rough = t <= 0.5 ? 0.9 + (0.16 - 0.9) * (t / 0.5) : 0.16 + (0.095 - 0.16) * ((t - 0.5) / 0.5);
+  const m = t <= 0.72 ? 0 : Math.min(1, (t - 0.72) / 0.28); // toward a polished metal at the mirror end
+  return { rough, m: m * m * (3 - 2 * m) };
+}
+const SL = (() => { const v = [-0.55, 0.65, 0.55], n = Math.hypot(...v); return v.map(x => x / n); })();
+// a small studio scene: unit sphere at the origin on a table (y = -1) in front of a wall (z = -2.6), one light from upper left front
+const sDot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], sNorm = v => { const n = Math.hypot(...v); return v.map(x => x / n); };
+function surfTrace(o, d, rough = 0) { // color (linear rgb) of the room seen along a ray, with the sphere's cast shadow and contact darkening
+  // a painter's room: table (y = -1), ceiling (y = 7.2), back wall (z = -2.6), wall behind the viewer with an easel (z = 9),
+  // side walls (x = ±5.5) with a leaded window on the left; only the plain wall and table are seen directly
+  let t = Infinity, nrm = null, alb = 0, id = '';
+  const hit = (tt, n, a, k) => { if (tt > 1e-4 && tt < t) { t = tt; nrm = n; alb = a; id = k; } };
+  if (d[1] < -1e-4) hit((-1 - o[1]) / d[1], [0, 1, 0], 0.36, 'table');
+  if (d[1] > 1e-4) hit((9.5 - o[1]) / d[1], [0, -1, 0], 0.7, 'ceil');
+  if (d[2] < -1e-4) hit((-2.6 - o[2]) / d[2], [0, 0, 1], 0.62, 'back');
+  if (d[2] > 1e-4) hit((9 - o[2]) / d[2], [0, 0, -1], 0.45, 'front');
+  if (d[0] < -1e-4) hit((-5.5 - o[0]) / d[0], [1, 0, 0], 0.55, 'left');
+  if (d[0] > 1e-4) hit((5.5 - o[0]) / d[0], [-1, 0, 0], 0.55, 'right');
+  if (!nrm) return [0.2, 0.2, 0.2];
+  const P = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t];
+  if (id === 'left') { // a tall studio window, centered on the light's direction; the surface's roughness blurs it
+    const b = Math.max(0.02, rough * t * 0.9), cl = v => Math.min(1, Math.max(0, v));
+    const box = (x, lo, hi) => cl((x - lo) / b + 0.5) * cl((hi - x) / b + 0.5), bar = (x, c, hw) => cl((Math.abs(x - c) - hw) / b + 0.5);
+    const cov = box(P[1], 4.6, 8.4) * box(P[2], 2.4, 8.6);
+    if (cov > 0) {
+      const glass = cov * bar(P[1], 6.5, 0.12) * bar(P[2], 5.5, 0.12), spread = (1 + b / 3.8) * (1 + b / 6.2), E = 55 / spread;
+      return [0.97, 0.98, 1].map(k => E * k * glass + 0.03 * (cov - glass) + 0.3 * (1 - cov));
+    }
+  }
+  let tint = [1, 1, 1];
+  if (id === 'ceil') { // no direct sun on a ceiling: it glows with light bounced in from the window, brightest near it
+    const near = Math.exp(-(P[0] + 5.5) / 3.2) * Math.exp(-(((P[2] - 5.5) / 4.5) ** 2));
+    return [0, 1, 2].map(() => alb * (0.2 + 0.75 * near));
+  }
+  if (id === 'front') { // an easel and a canvas behind the viewer
+    const legA = Math.abs(P[0] - (-0.6 + (5.6 - P[1]) * -0.3)) < 0.12, legB = Math.abs(P[0] - (-0.6 + (5.6 - P[1]) * 0.3)) < 0.12, mast = Math.abs(P[0] + 0.6) < 0.1;
+    if (P[1] < 5.6 && (legA || legB || mast)) tint = [0.12, 0.08, 0.05];
+    if (P[0] > -2.8 && P[0] < 1.6 && P[1] > 0.9 && P[1] < 4.3) tint = Math.abs(P[1] - 0.9) < 0.14 ? [0.12, 0.08, 0.05] : [0.75, 0.68, 0.55];
+  }
+  if (id === 'right' && P[2] > -1 && P[2] < 1.6 && P[1] < 3.6) tint = [0.55, 0.45, 0.35]; // a warm doorway
+  const L = SL;
+  // soft shadow: how close the ray toward the light passes to the sphere, with a penumbra that widens with distance
+  const tc = -sDot(P, L); let vis = 1;
+  if (tc > 0) { const q = [P[0] + L[0] * tc, P[1] + L[1] * tc, P[2] + L[2] * tc], dist = Math.hypot(...q), pen = 0.03 + 0.1 * tc;
+    vis = Math.min(1, Math.max(0, (dist - (1 - pen)) / (2 * pen))); vis = vis * vis * (3 - 2 * vis); }
+  // contact darkening: how much of the sky the sphere hides from this point
+  const c = [-P[0], -P[1], -P[2]], cd = Math.hypot(...c), ao = 1 - 0.9 * Math.max(0, sDot(nrm, c) / cd) / (cd * cd);
+  const NL = Math.max(0, sDot(nrm, L)), g = alb * (0.85 * NL * vis + 0.32 * ao);
+  return tint.map(k => g * k);
+}
+// wear on the polished end: a few soft dents and smudges, fixed so the ball looks the same every time
+const SWEAR = (() => {
+  const r = mulberry(1884), rv = () => sNorm([r() * 2 - 1, r() * 2 - 1, r() * 2 - 1]);
+  const dents = Array.from({ length: 7 }, () => ({ c: rv(), s: 0.12 + r() * 0.2, a: (r() < 0.5 ? -1 : 1) * (0.25 + r() * 0.35) }));
+  const smudges = Array.from({ length: 5 }, () => ({ c: rv(), s: 0.25 + r() * 0.3 }));
+  return { dents, smudges };
+})();
+function surfWear(N, amt) { // returns a disturbed normal and a roughness multiplier
+  if (amt <= 0) return { N, rk: 1 };
+  let n = N.slice(), rk = 1;
+  for (const d of SWEAR.dents) { // a dent tilts the surface around its center
+    const v = [N[0] - d.c[0], N[1] - d.c[1], N[2] - d.c[2]], q = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / (d.s * d.s);
+    if (q < 9) { const f = d.a * amt * 0.45 * Math.exp(-q) / d.s; n = [n[0] + v[0] * f, n[1] + v[1] * f, n[2] + v[2] * f]; }
+  }
+  for (const m of SWEAR.smudges) { const v = [N[0] - m.c[0], N[1] - m.c[1], N[2] - m.c[2]]; rk += 1.4 * amt * Math.exp(-(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) / (m.s * m.s)); }
+  return { N: sNorm(n), rk };
+}
+function surfShade(N0, col, P0, V = [0, 0, 1]) {
+  const wear = surfWear(N0, Math.max(0, (P0.m - 0.15) / 0.85)), N = wear.N, P = { ...P0, rough: Math.min(0.9, P0.rough * wear.rk) }; // col: linear rgb of the local color; returns linear rgb
+  const L = SL, dot = sDot;
+  const NL = Math.max(0, dot(N, L)), NV = Math.max(1e-3, dot(N, V));
+  const H = sNorm([L[0] + V[0], L[1] + V[1], L[2] + V[2]]), NH = Math.max(0, dot(N, H));
+  const a = P.rough * P.rough, a2 = a * a, D = a2 / (Math.PI * (NH * NH * (a2 - 1) + 1) ** 2), k = a / 2;
+  const G = (x => x / (x * (1 - k) + k)), Vis = G(Math.max(NL, 1e-3)) * G(NV) / (4 * Math.max(NL, 1e-3) * NV);
+  const vn = dot(V, N), R = [2 * vn * N[0] - V[0], 2 * vn * N[1] - V[1], 2 * vn * N[2] - V[2]]; // the view reflected about the normal
+  const envSharp = surfTrace(N, R, P.rough), env = envSharp.map(v => v > 1.5 ? v : 0.4 + (v - 0.4) * (1 - P.rough)), fres = (1 - NV) ** 5;
+  const fill = Math.max(0, (0.7 * N[0] - 0.2 * N[1] + 0.7 * N[2]) / 1.01);
+  const sao = 1 - 0.45 * Math.max(0, -N[1]) ** 3; // darker where the sphere meets the table
+  const amb = (0.16 * (0.55 + 0.45 * N[1]) + 0.08 * Math.max(0, -N[1]) + 0.1 * fill) * sao;
+  return col.map((c, j) => {
+    const F0 = 0.04 * (1 - P.m) + P.m * (0.35 + 0.65 * c), F = F0 + (1 - F0) * fres;
+    const diff = (1 - P.m) * c * (0.85 * NL + amb);
+    const spec = D * Vis * F * NL * 0.25; // only a whisper of the old point light, for the broad sheen of rough surfaces
+    const refl = F * env[j] * (1 - P.rough) ** 1.5;
+    return diff * (1 - F * (1 - P.rough)) + spec + refl;
+  });
+}
+function drawSphere(cv, hex) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth || 240, Hh = cv.clientHeight || 190;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);
+  const w = cv.width, h = cv.height, ctx = cv.getContext('2d'), img = ctx.createImageData(w, h), d = img.data;
+  const col = [1, 3, 5].map(o => surfLin(parseInt(hex.slice(o, o + 2), 16) / 255)), P = surfParams(SURF.t);
+  const C = [0, 1.1, 6.4], f = sNorm([0, -0.25 - C[1], -C[2]]), rt = sNorm([-f[2], 0, f[0]]), up = [rt[1] * f[2] - rt[2] * f[1], rt[2] * f[0] - rt[0] * f[2], rt[0] * f[1] - rt[1] * f[0]], tf = 0.25;
+  const SS = SURF.fast ? 1 : 2; // two-by-two samples per pixel smooth the sphere's edge (one while dragging)
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let acc = [0, 0, 0];
+    for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
+      const u = ((x + (sx + 0.5) / SS) - w / 2) / (h / 2) * tf, v = -((y + (sy + 0.5) / SS) - h / 2) / (h / 2) * tf;
+      const dir = sNorm([f[0] + u * rt[0] + v * up[0], f[1] + u * rt[1] + v * up[1], f[2] + u * rt[2] + v * up[2]]);
+      const b = sDot(C, dir), cc = sDot(C, C) - 1, disc = b * b - cc;
+      let out;
+      if (disc > 0 && -b - Math.sqrt(disc) > 0) { const t = -b - Math.sqrt(disc), N = [C[0] + dir[0] * t, C[1] + dir[1] * t, C[2] + dir[2] * t]; out = surfShade(N, col, P, [-dir[0], -dir[1], -dir[2]]); }
+      else out = surfTrace(C, dir);
+      acc[0] += out[0]; acc[1] += out[1]; acc[2] += out[2];
+    }
+    const i = (y * w + x) * 4, n = SS * SS;
+    d[i] = surfEnc(acc[0] / n); d[i + 1] = surfEnc(acc[1] / n); d[i + 2] = surfEnc(acc[2] / n); d[i + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function surfReadings(hex) { // light side, core shadow and highlight, read back as notations
+  const col = [1, 3, 5].map(o => surfLin(parseInt(hex.slice(o, o + 2), 16) / 255)), P = surfParams(SURF.t), nz = v => { const n = Math.hypot(...v); return v.map(x => x / n); };
+  const at = N => munsellOfRgb(surfShade(nz(N), col, P).map(surfEnc).map(v => Math.max(0, Math.min(255, v))));
+  return [['Light', at([-0.62, 0.45, 0.64])], ['Shadow', at([0.65, -0.45, 0.61])], ['Highlight', at((() => { const w = sNorm([-5.5, 7.5, 7.1]); return [w[0], w[1], w[2] + 1]; })())]];
+}
+function surfHTML(hex) {
+  return `<div class="sph"><canvas class="sph-cv" data-hex="${hex}" role="img" aria-label="The chip's color on a sphere"></canvas>
+    <input type="range" class="sph-r" min="0" max="100" value="${Math.round(SURF.t * 100)}" aria-label="Surface, from matte to mirror">
+    <div class="sph-lab"><span>Matte</span><span>Glossy</span><span>Mirror</span></div>
+    <div class="sph-read" data-hex="${hex}"></div></div>`;
+}
+function surfDraw(root) {
+  (root || document).querySelectorAll('.sph-cv').forEach(cv => drawSphere(cv, cv.dataset.hex));
+  (root || document).querySelectorAll('.sph-read').forEach(el => {
+    el.innerHTML = surfReadings(el.dataset.hex).map(([k, a]) => `<span><i style="background:${a.hex}"></i><b>${k}</b> ${munsellText(a)}</span>`).join('');
+  });
+  document.querySelectorAll('.sph-r').forEach(s => { if (+s.value !== Math.round(SURF.t * 100)) s.value = Math.round(SURF.t * 100); });
+}
+document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('sph-r')) { SURF.t = +e.target.value / 100; SURF.fast = true; surfDraw(); clearTimeout(SURF.tm); SURF.tm = setTimeout(() => { SURF.fast = false; surfDraw(); }, 180); } });
 function bkBigFill() { // the selected chip, shown large in the page's empty space
   $('bkBook').querySelectorAll('.bk-big').forEach(el => {
     const s = BOOK.sel, h = +el.dataset.h;
     if (!s || s.h !== h) { el.innerHTML = ''; return; }
     const lab = s.C ? bkLab(h, s.V, s.C) : [munsellLofV(s.V), 0, 0], hex = lab2hex(...lab), nm = bkName(h);
-    el.innerHTML = `<span class="bk-chipb" style="background-color:${hex}" role="img" aria-label="${s.C ? nm.label + ' ' + s.V + '/' + s.C : 'N ' + s.V + '/'}"></span>`
+    el.innerHTML = `<div class="bk-pair"><span class="bk-chipb" style="background-color:${hex}" role="img" aria-label="${s.C ? nm.label + ' ' + s.V + '/' + s.C : 'N ' + s.V + '/'}"></span>${surfHTML(hex)}</div>`
       + `<b>${s.C ? `${nm.label} ${s.V}/${s.C}` : `N ${s.V}/`}</b><small>${s.C ? FAMNAMES[nm.fam].toLowerCase() + ' · value ' + s.V + ' · chroma ' + s.C : 'neutral · value ' + s.V}</small>`;
   });
+  // the sphere sits beside the large chip; where that chip isn't shown (phones, two-page spread) it moves below the details
+  const big = [...$('bkBook').querySelectorAll('.bk-big .sph')].find(x => x.offsetParent !== null), S = $('bkSurf');
+  if (S) { if (!big && BOOK.sel) { const s = BOOK.sel, lab = s.C ? bkLab(s.h, s.V, s.C) : [munsellLofV(s.V), 0, 0]; S.innerHTML = surfHTML(lab2hex(...lab)); S.hidden = false; } else { S.innerHTML = ''; S.hidden = true; } }
+  surfDraw();
 }
 function renderBook() {
   const sp = bkSpread(); if (sp && BOOK.i % 2) BOOK.i -= 1;
@@ -3304,7 +3522,7 @@ function bkSelect(h, V, C) {
   });
   $('bkLoad').addEventListener('click', () => { if (!BOOK.rec) return; if ($('bookCard').classList.contains('full')) bkFull(false);
     state.mix = { ...BOOK.rec.parts }; renderIngredients(); renderPalette(); update();
-    const mc = document.querySelector('[aria-label="Mixer"]'); if (mc) mc.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); });
+    reveal(document.querySelector('[aria-label="Mixer"]')); });
   $('bkMine').addEventListener('click', () => {
     if (!current) { $('bkMine').textContent = 'Mix something first'; setTimeout(() => $('bkMine').textContent = 'Open to my mix', 1600); return; }
     const a = current; let h = Math.round(a.hue / 2.5) * 2.5; if (h <= 0) h += 100;
