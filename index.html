@@ -738,6 +738,13 @@ html,body{overflow-x:clip} body{margin:0}
       </dl>
       <p class="note">Paint mixes by subtraction. Each pigment absorbs part of the spectrum, and the mix keeps only the light that all of its pigments reflect. The wavelength it registers as is the single spectral color the eye matches its hue to. Purples have no single wavelength, so they are named by their complement, marked with a c.</p>
     </div>
+    <div class="lt" id="ltBox">
+      <div class="lt-head"><span class="label">Light, paint, eye</span><label class="lt-k" for="ltK">Lamp <input type="range" id="ltK" min="2500" max="6500" step="100" value="6500"> <span class="mono" id="ltKLab">6500 K · daylight</span></label></div>
+      <div class="lt-stage"><canvas id="ltCv" role="img" aria-label="Light from a lamp fills the scene: some flies past, some lights the floor around the sphere's cast shadow, and what the paint does not absorb scatters back, part of it to the eye"></canvas></div>
+      <label class="lt-rev" for="ltRev"><span>Follow the light</span><input type="range" id="ltRev" min="0" max="100" step="0.5" value="0"><span class="lt-steps"><i>lamp</i><i>light</i><i>paint</i><i>eye</i></span></label>
+      <p class="lt-read" id="ltRead" aria-live="polite"></p>
+      <p class="note">The lamp sends every color of its light out in every direction. Light that misses the sphere flies past or lands on the floor; where the sphere blocks it, the floor is left in shadow. Of the light that reaches the sphere, a little of all of it bounces straight off the glossy surface, which is why the highlight takes the color of the lamp. The rest enters the paint, where the pigments absorb some wavelengths and send others back out. Those are the colors you see. Slide to follow the light from the lamp to your eye, and warm the lamp to watch the same paint change color.</p>
+    </div>
   </section>
 
 
@@ -765,6 +772,17 @@ html,body{overflow-x:clip} body{margin:0}
 </dialog>
 
 <style id="studio-css">
+.lt{display:flex; flex-direction:column; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--line)}
+.lt-head{display:flex; justify-content:space-between; align-items:center; gap:10px 20px; flex-wrap:wrap}
+.lt-k, .lt-rev{display:flex; align-items:center; gap:10px; font-size:.84rem; color:var(--muted)}
+.lt-k input{width:160px}
+.lt-stage{line-height:0}
+#ltCv{width:100%; aspect-ratio:3 / 1; display:block}
+.lt-chart{width:100%; height:120px; display:block}
+.lt-rev input{flex:1}
+.lt-steps{display:none}
+.lt-read{margin:0; font-size:.9rem}
+@media (max-width:700px){ #ltCv{aspect-ratio:2 / 1} .lt-rev{flex-wrap:wrap} .lt-rev input{flex-basis:100%} }
 .pk-desc{text-wrap:balance}
 .hint-q{width:20px; height:20px; border-radius:50%; border:1px solid var(--line); background:none; color:var(--muted); font:600 .72rem/1 var(--body); cursor:pointer; padding:0; vertical-align:1px; margin-left:4px}
 .hint-q:hover, .hint-q[aria-expanded="true"]{border-color:var(--ink); color:var(--ink)}
@@ -2707,6 +2725,7 @@ const specBand = l => SPEC_NAMES[Math.max(0, SPEC_KNOTS.findIndex(([a], k) => k 
 })();
 const reflAt = (R, l) => { const i = Math.max(0, Math.min(30, (l - 400) / 10)), i0 = Math.floor(i), i1 = Math.min(30, i0 + 1); return R[i0] + (R[i1] - R[i0]) * (i - i0); };
 function renderWave() {
+  if (typeof ltRequest === 'function') ltRequest();
   const ids = Object.keys(state.mix).filter(id => state.mix[id] > 0);
   const R = ids.length && pigmentLoad(state.mix) ? filmR(state.mix, GROUND[state.ground].R) : ids.length ? GROUND[state.ground].R : null;
   const svg = $('wvSvg');
@@ -3435,27 +3454,29 @@ function surfShade(N0, col, P0, V = [0, 0, 1]) {
   return col.map((c, j) => {
     const F0 = 0.04 * (1 - P.m) + P.m * (0.35 + 0.65 * c), F = F0 + (1 - F0) * fres;
     const diff = (1 - P.m) * c * (0.85 * NL + amb);
-    const spec = D * Vis * F * NL * 0.25; // only a whisper of the old point light, for the broad sheen of rough surfaces
-    const refl = F * env[j] * (1 - P.rough) ** 1.5;
+    const lt = P.light ? P.light[j] : 1; // the color of the light, carried by everything the surface mirrors
+    const spec = D * Vis * F * NL * 0.25 * lt; // only a whisper of the old point light, for the broad sheen of rough surfaces
+    const refl = F * env[j] * (1 - P.rough) ** 1.5 * lt;
     return diff * (1 - F * (1 - P.rough)) + spec + refl;
   });
 }
-function drawSphere(cv, hex) {
-  const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth || 240, Hh = cv.clientHeight || 190;
+function drawSphere(cv, hex, opt = {}) {
+  const dpr = opt.dpr || Math.min(2, window.devicePixelRatio || 1), W = opt.w || cv.clientWidth || 240, Hh = opt.h || cv.clientHeight || 190;
   cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);
   const w = cv.width, h = cv.height, ctx = cv.getContext('2d'), img = ctx.createImageData(w, h), d = img.data;
-  const col = [1, 3, 5].map(o => surfLin(parseInt(hex.slice(o, o + 2), 16) / 255)), P = surfParams(SURF.t);
+  const col = opt.lin || [1, 3, 5].map(o => surfLin(parseInt(hex.slice(o, o + 2), 16) / 255)), P = surfParams(opt.t != null ? opt.t : SURF.t);
+  P.light = opt.light || [1, 1, 1]; const shift = (opt.shift || 0) * w;
   const C = [0, 1.1, 6.4], f = sNorm([0, -0.25 - C[1], -C[2]]), rt = sNorm([-f[2], 0, f[0]]), up = [rt[1] * f[2] - rt[2] * f[1], rt[2] * f[0] - rt[0] * f[2], rt[0] * f[1] - rt[1] * f[0]], tf = 0.25;
-  const SS = SURF.fast ? 1 : 2; // two-by-two samples per pixel smooth the sphere's edge (one while dragging)
+  const SS = opt.ss || (SURF.fast ? 1 : 2); // two-by-two samples per pixel smooth the sphere's edge (one while dragging)
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     let acc = [0, 0, 0];
     for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
-      const u = ((x + (sx + 0.5) / SS) - w / 2) / (h / 2) * tf, v = -((y + (sy + 0.5) / SS) - h / 2) / (h / 2) * tf;
+      const u = ((x + (sx + 0.5) / SS) - w / 2 - shift) / (h / 2) * tf, v = -((y + (sy + 0.5) / SS) - h / 2) / (h / 2) * tf;
       const dir = sNorm([f[0] + u * rt[0] + v * up[0], f[1] + u * rt[1] + v * up[1], f[2] + u * rt[2] + v * up[2]]);
       const b = sDot(C, dir), cc = sDot(C, C) - 1, disc = b * b - cc;
       let out;
       if (disc > 0 && -b - Math.sqrt(disc) > 0) { const t = -b - Math.sqrt(disc), N = [C[0] + dir[0] * t, C[1] + dir[1] * t, C[2] + dir[2] * t]; out = surfShade(N, col, P, [-dir[0], -dir[1], -dir[2]]); }
-      else out = surfTrace(C, dir);
+      else out = surfTrace(C, dir).map((v, j) => v * P.light[j]);
       acc[0] += out[0]; acc[1] += out[1]; acc[2] += out[2];
     }
     const i = (y * w + x) * 4, n = SS * SS;
@@ -3482,6 +3503,146 @@ function surfDraw(root) {
   document.querySelectorAll('.sph-r').forEach(s => { if (+s.value !== Math.round(SURF.t * 100)) s.value = Math.round(SURF.t * 100); });
 }
 document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('sph-r')) { SURF.t = +e.target.value / 100; SURF.fast = true; surfDraw(); clearTimeout(SURF.tm); SURF.tm = setTimeout(() => { SURF.fast = false; surfDraw(); }, 180); } });
+/* ---------- Light, paint, eye: scrub from the lamp switching on to the light reaching the eye ---------- */
+var LT = { K: 6500, s: 0, R: null, w: null, dots: null, sph: null, geo: null, dirty: true, visible: false };
+const ltPlanck = (l, T) => { const lm = l * 1e-9; return 1 / (lm ** 5 * (Math.exp(0.0143877 / (lm * T)) - 1)); };
+function ltWeights(T) { // the lamp's spectrum relative to daylight (6500 K reads as neutral white), scaled to equal brightness
+  const w = WL.map(l => ltPlanck(l, T) / ltPlanck(l, 6500)), ky = CMF.reduce((s, c) => s + c[1], 0) / CMF.reduce((s, c, i) => s + w[i] * c[1], 0);
+  return w.map(v => v * ky);
+}
+const ltLinOf = xyz => [3.2406 * xyz[0] - 1.5372 * xyz[1] - 0.4986 * xyz[2], -0.9689 * xyz[0] + 1.8758 * xyz[1] + 0.0415 * xyz[2], 0.0557 * xyz[0] - 0.2040 * xyz[1] + 1.0570 * xyz[2]].map(v => Math.max(0, v));
+const ltCss = (lin, a = 1) => { const m = Math.max(1, ...lin); return `rgba(${lin.map(v => surfEnc(v / m)).join(',')},${a})`; };
+const LT_SPEC = WL.map((l, i) => { const c = ltLinOf(CMF[i]), m = Math.max(...c) || 1; return 'rgb(' + c.map(v => Math.round(255 * Math.pow(v / m, 1 / 2.2))).join(',') + ')'; });
+function ltKName(K) { return K >= 6000 ? 'daylight' : K >= 4500 ? 'cool white' : K >= 3500 ? 'neutral white' : K >= 2900 ? 'warm white' : 'soft white'; }
+function ltCurrentR() { const ids = Object.keys(state.mix).filter(id => state.mix[id] > 0); return ids.length && pigmentLoad(state.mix) ? filmR(state.mix, GROUND[state.ground].R) : PIG.n5.R; }
+const ltEase = (a, b, s) => Math.min(1, Math.max(0, (s - a) / (b - a)));
+function ltRequest() { if (!LT) return; LT.dirty = true; if (!LT.visible) return; clearTimeout(LT.ut); LT.ut = setTimeout(() => { LT.dirty = false; ltUpdate(); }, 80); }
+function ltSphereImg(r, obj, light, lit, Ldir = [-0.82, 0.38, 0.45]) { // a medium-gloss sphere lit by the lamp alone, floating in the dark
+  const c = document.createElement('canvas'), n = Math.ceil(r * 2), ctx = c.getContext('2d'); c.width = c.height = n;
+  const img = ctx.createImageData(n, n), d = img.data, L = sNorm(Ldir), H = sNorm([L[0], L[1], L[2] + 1]);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const nx = (x + 0.5 - r) / r, ny = -(y + 0.5 - r) / r, q = nx * nx + ny * ny, i = (y * n + x) * 4; if (q > 1) { d[i + 3] = 0; continue; }
+    const N = [nx, ny, Math.sqrt(1 - q)], NL = Math.max(0, sDot(N, L)), NH = Math.max(0, sDot(N, H)), fres = 0.04 + 0.96 * (1 - N[2]) ** 5;
+    const out = obj.map((c0, j) => lit * (c0 * (0.92 * NL + 0.035) + light[j] * (0.55 * NH ** 70 + 0.06 * fres * NL)) + (1 - lit) * 0.035);
+    d[i] = surfEnc(out[0]); d[i + 1] = surfEnc(out[1]); d[i + 2] = surfEnc(out[2]); d[i + 3] = Math.round(255 * Math.min(1, (1 - Math.sqrt(q)) * r * 1.5));
+  }
+  ctx.putImageData(img, 0, 0); return c;
+}
+function ltCast(g, o, dir) { // the first thing a ray from the lamp meets: the sphere, the floor or the dark beyond
+  const { c, r, floorY, W } = g, oc = [o[0] - c[0], o[1] - c[1]], b = oc[0] * dir[0] + oc[1] * dir[1], disc = b * b - (oc[0] ** 2 + oc[1] ** 2 - r * r);
+  let best = { t: Infinity, k: 'edge' };
+  if (disc > 0) { const t = -b - Math.sqrt(disc); if (t > 0) best = { t, k: 'sphere' }; }
+  if (dir[1] > 0) { const t = (floorY - o[1]) / dir[1]; if (t < best.t) best = { t, k: 'floor' }; }
+  if (best.k === 'edge') best.t = Math.min(dir[0] > 0 ? (W + 20 - o[0]) / dir[0] : Infinity, dir[1] < 0 ? (-20 - o[1]) / dir[1] : Infinity);
+  return best;
+}
+function ltFloorImg(g, light) { // a floor lit by the lamp, with the sphere's cast shadow, seen from a little above
+  const { W, H, c, r, floorY, lamp, L3 } = g, dpr = Math.min(2, window.devicePixelRatio || 1), y0 = Math.floor(floorY - H * 0.12);
+  const cv = document.createElement('canvas'); cv.width = Math.round(W * dpr); cv.height = Math.round((H - y0) * dpr);
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(cv.width, cv.height), d = img.data, Lh = L3[1], Lz = L3[2];
+  const bg = Math.pow(71 / 255, 2.2), E = (X, z) => { const dd = Math.hypot(L3[0] - X, Lh, Lz - z); return Lh / (dd * dd * dd); }, E0 = E(c[0] + r, 0);
+  for (let py = 0; py < cv.height; py++) { const Y = y0 + py / dpr, z = (Y - floorY) / 0.3;
+    for (let px = 0; px < cv.width; px++) { const X = px / dpr, Ld = [L3[0] - X, Lh, Lz - z], L2 = Ld[0] ** 2 + Ld[1] ** 2 + Ld[2] ** 2;
+      const t = Math.min(1, Math.max(0, ((c[0] - X) * Ld[0] + r * Ld[1] - z * Ld[2]) / L2)), dm = Math.hypot(X + Ld[0] * t - c[0], Ld[1] * t - r, z + Ld[2] * t);
+      const sh = Math.min(1, Math.max(0, (dm - r * 0.97) / (r * 0.12))), ao = 1 - 0.6 * Math.exp(-(((X - c[0]) / (r * 0.9)) ** 2 + (z / (r * 0.5)) ** 2));
+      const fade = Math.min(1, (Y - y0) / (H * 0.08)) * Math.min(1, X / (W * 0.05)) * Math.min(1, (W - X) / (W * 0.08)), v = Math.min(2, 0.42 * E(X, z) / E0) * sh * fade, i = (py * cv.width + px) * 4;
+      for (let j = 0; j < 3; j++) d[i + j] = surfEnc(bg * (0.55 + 0.45 * ao) + light[j] * v * 0.11 * ao);
+      d[i + 3] = 255; } }
+  ctx.putImageData(img, 0, 0); return { cv, y0 };
+}
+function ltUpdate() {
+  if (!$('ltBox')) return;
+  LT.R = ltCurrentR(); LT.w = ltWeights(LT.K); LT.empty = !Object.keys(state.mix).some(id => PIG[id] && state.mix[id] > 0);
+  $('ltKLab').textContent = LT.K + ' K · ' + ltKName(LT.K);
+  const cv = $('ltCv'), W = cv.clientWidth || 800, H = cv.clientHeight || 300;
+  // the lamp gives the paint its color: only a little of its tint is adapted away
+  const raw = ltLinOf(R2XYZ(LT.w)), adapt = raw.map(v => Math.pow(Math.max(v, 1e-3), 0.3));
+  const obj = ltLinOf(R2XYZ(LT.R.map((r, i) => r * LT.w[i]))).map((v, j) => v / adapt[j]), light = raw.map((v, j) => v / adapt[j]);
+  LT.obj = obj; LT.light = light; LT.lightCss = ltCss(light);
+  const floorY = H * 0.8, r = Math.min(H * 0.27, W * 0.14), c = [W * 0.6, floorY - r], lamp = [W * 0.08, H * 0.14];
+  // the lamp in space: a little in front of the sphere and high up, drawn where it appears on the 0.3 floor projection
+  const zL = 0.45 * (c[0] - lamp[0]), L3 = [lamp[0], floorY - lamp[1] + 0.3 * zL, zL];
+  LT.geo = { W, H, c, r, floorY, lamp, L3, eye: [W * 0.26, H * 0.93] };
+  const Ls = [L3[0] - c[0], L3[1] - r, L3[2]]; // from the sphere's center to the lamp: sets the highlight, the core shadow and the cast shadow alike
+  LT.sph = ltSphereImg(r, obj, light, 1, Ls); LT.sph0 = ltSphereImg(r, obj, light, 0, Ls);
+  LT.floor = ltFloorImg(LT.geo, light);
+  // a fixed crowd of light: wavelengths in proportion to the lamp's output, poured out in every direction
+  const rnd = mulberry(5), pickW = wt => { const T = wt.reduce((a, b) => a + b, 0); let x = rnd() * T, i = 0; while (x > wt[i] && i < wt.length - 1) x -= wt[i++]; return i; };
+  const aTop = Math.atan2(c[1] - r * 1.9 - lamp[1], c[0] - lamp[0]), aBot = Math.atan2(floorY - lamp[1], W * 0.05), [ex, ey] = LT.geo.eye;
+  LT.speed = Math.hypot(c[0] - lamp[0], c[1] - lamp[1]) / 0.75; // the leading edge reaches the sphere three quarters of the way into its journey
+  LT.dots = Array.from({ length: 22000 }, () => {
+    const i = pickW(LT.w), a = aTop + (aBot - aTop) * rnd(), dir = [Math.cos(a), Math.sin(a)], o = [lamp[0] + dir[0] * 12, lamp[1] + dir[1] * 12];
+    const hit = ltCast(LT.geo, o, dir), q = { i, lag: rnd() * 2.4, len: 1.5 + rnd() * 2.5, a: 0.18 + rnd() * 0.25, o, dir, l1: hit.t, l2: 0 };
+    if (hit.k === 'sphere') { const hp = [o[0] + dir[0] * hit.t, o[1] + dir[1] * hit.t], n = [(hp[0] - c[0]) / r, (hp[1] - c[1]) / r]; q.hp = hp;
+      if (rnd() < 0.05) { const dn = dir[0] * n[0] + dir[1] * n[1]; q.d2 = [dir[0] - 2 * dn * n[0], dir[1] - 2 * dn * n[1]]; q.l2 = W; } // the gloss: a mirror bounce, still the lamp's light
+      else if (rnd() < LT.R[i]) { if (rnd() < 0.5) { const t = [ex + (rnd() - 0.5) * 14 - hp[0], ey + (rnd() - 0.5) * 8 - hp[1]], L = Math.hypot(...t); q.d2 = [t[0] / L, t[1] / L]; q.l2 = L; } // what the paint sends your way
+        else { const th = Math.atan2(n[1], n[0]) + (rnd() - 0.5) * Math.PI * 0.95; q.d2 = [Math.cos(th), Math.sin(th)]; q.l2 = 60 + rnd() * 160; q.fade = 1; } } } // and every other way
+    return q;
+  });
+  ltDraw();
+}
+function ltDraw() { // everything placed by the slider: 0 lamp off · lamp on · light travels · reaches the paint · what's left reaches the eye
+  const cv = $('ltCv'), g = LT.geo; if (!cv || !g) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(g.W * dpr); cv.height = Math.round(g.H * dpr);
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, g.W, g.H);
+  const s = LT.s, on = ltEase(0.02, 0.12, s), tt = (s - 0.12) / 0.38; // tt: time since the lamp came on, 1 = about when the light has filled the scene
+  const arrived = ltEase(0.72, 1.15, tt), floorLit = ltEase(0.4, 1.0, tt);
+  // the floor and its cast shadow appear as the light reaches them
+  if (floorLit > 0) { ctx.globalAlpha = floorLit; ctx.drawImage(LT.floor.cv, 0, LT.floor.y0, g.W, g.H - LT.floor.y0); ctx.globalAlpha = 1; }
+  // the sphere: dark until light reaches it, then the color the lamp gives it
+  const [cx, cy] = g.c, r = g.r;
+  ctx.globalAlpha = 1; ctx.drawImage(LT.sph0, cx - r, cy - r);
+  ctx.globalAlpha = arrived; ctx.drawImage(LT.sph, cx - r, cy - r); ctx.globalAlpha = 1;
+  // the lamp
+  const [lx, ly] = g.lamp;
+  if (on > 0) { const gl = ctx.createRadialGradient(lx, ly, 2, lx, ly, 70); gl.addColorStop(0, ltCss(LT.light, 0.9 * on)); gl.addColorStop(1, ltCss(LT.light, 0)); ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(lx, ly, 70, 0, 7); ctx.fill(); }
+  ctx.fillStyle = on > 0 ? ltCss(LT.light, 0.25 + 0.75 * on) : 'rgba(120,115,105,.5)'; ctx.beginPath(); ctx.arc(lx, ly, 11, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(235,227,207,.6)'; ctx.lineWidth = 1.4; ctx.stroke(); ctx.fillStyle = 'rgba(235,227,207,.5)'; ctx.fillRect(lx - 5, ly + 11, 10, 7);
+  // the eye
+  const [ex, ey] = g.eye; ctx.strokeStyle = 'rgba(235,227,207,.7)'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.moveTo(ex - 16, ey); ctx.quadraticCurveTo(ex, ey - 12, ex + 16, ey); ctx.quadraticCurveTo(ex, ey + 12, ex - 16, ey); ctx.stroke();
+  ctx.fillStyle = 'rgba(235,227,207,.7)'; ctx.beginPath(); ctx.arc(ex, ey, 4.5, 0, 7); ctx.fill();
+  // the light: a fine mist of every wavelength, batched by color so thousands of grains stay quick to draw
+  if (tt > 0) {
+    const AB = [0.3, 0.45, 0.65, 0.95], bins = new Map(), add = (i, a, x0, y0, x1, y1) => { const k = i * 4 + (a < 0.26 ? 0 : a < 0.41 ? 1 : a < 0.65 ? 2 : 3); let b = bins.get(k); if (!b) bins.set(k, b = []); b.push(x0, y0, x1, y1); };
+    for (const q of LT.dots) {
+      const d = (tt - q.lag) * LT.speed; if (d <= 0 || d > q.l1 + q.l2) continue;
+      if (d <= q.l1) { const d0 = Math.max(0, d - q.len); add(q.i, q.a, q.o[0] + q.dir[0] * d0, q.o[1] + q.dir[1] * d0, q.o[0] + q.dir[0] * d, q.o[1] + q.dir[1] * d); continue; }
+      const e = d - q.l1, e0 = Math.max(0, e - q.len), a = Math.min(1, q.a * 3.2) * (q.fade ? 1 - e / q.l2 : 1);
+      add(q.i, a, q.hp[0] + q.d2[0] * e0, q.hp[1] + q.d2[1] * e0, q.hp[0] + q.d2[0] * e, q.hp[1] + q.d2[1] * e);
+    }
+    ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineWidth = 1;
+    for (const [k, b] of bins) { ctx.globalAlpha = AB[k % 4]; ctx.strokeStyle = LT_SPEC[k >> 2]; ctx.beginPath(); for (let n = 0; n < b.length; n += 4) { ctx.moveTo(b[n], b[n + 1]); ctx.lineTo(b[n + 2], b[n + 3]); } ctx.stroke(); }
+  }
+  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  // what the eye receives
+  const seen = ltEase(0.88, 0.98, s);
+  if (seen > 0) { const a = LT.obj, m = Math.max(1, ...a), hex = '#' + a.map(v => surfEnc(v / m).toString(16).padStart(2, '0')).join(''), mu = munsellOfRgb(a.map(v => surfEnc(v / m)));
+    ctx.globalAlpha = seen; ctx.fillStyle = hex; ctx.fillRect(ex + 26, ey - 14, 28, 28); ctx.strokeStyle = 'rgba(235,227,207,.6)'; ctx.strokeRect(ex + 26, ey - 14, 28, 28);
+    ctx.fillStyle = 'rgba(235,227,207,.95)'; ctx.font = '600 13px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'left'; ctx.fillText(munsellText(mu), ex + 62, ey + 5); ctx.globalAlpha = 1; }
+  ltRead();
+}
+function ltRead() {
+  const s = LT.s, tot = LT.w.reduce((a, v) => a + v, 0), back = LT.w.reduce((a, v, i) => a + v * LT.R[i], 0), pct = Math.round(back / tot * 100);
+  let pk = 0; LT.R.forEach((r, i) => { if (r * LT.w[i] > LT.R[pk] * LT.w[pk]) pk = i; });
+  const paint = LT.empty ? 'Neutral 5 (the mix is empty)' : 'the mix';
+  const t = s < 0.02 ? 'Slide to switch on the lamp and follow its light.'
+    : s < 0.14 ? `The lamp switches on. At ${LT.K} K it gives off every wavelength of the visible spectrum, ${LT.K < 4500 ? 'weighted toward the reds and oranges' : 'in close to equal measure'}.`
+    : s < 0.3 ? 'Light pours out in every direction as a full spectrum: every color is in it, though together it reads as the lamp’s white.'
+    : s < 0.45 ? 'Some of it lands on the floor and lights it; some flies past the sphere into the dark. Where the sphere stands in the way, the floor gets none: that is the cast shadow.'
+    : s < 0.62 ? `Light that strikes the paint: a little of every color bounces straight off the gloss, which becomes the highlight; the rest enters ${paint}, which absorbs about ${100 - pct}% of it.`
+    : s < 0.9 ? `What is not absorbed scatters back out of the paint in every direction, strongest near ${WL[pk]} nm. Only the part heading your way reaches the eye, a blend of the wavelengths that are left.`
+    : `The eye receives what is left, about ${pct}% of the lamp’s light, and reads it as the sphere’s color.`;
+  $('ltRead').textContent = t;
+}
+(function ltWire() {
+  if (!$('ltBox')) return;
+  $('ltK').addEventListener('input', () => { LT.K = +$('ltK').value; $('ltKLab').textContent = LT.K + ' K · ' + ltKName(LT.K); clearTimeout(LT.kt); LT.kt = setTimeout(ltUpdate, 40); });
+  $('ltRev').addEventListener('input', () => { LT.s = +$('ltRev').value / 100; ltDraw(); });
+  new IntersectionObserver(es => { LT.visible = es[0].isIntersecting; if (LT.visible && LT.dirty) { LT.dirty = false; ltUpdate(); } }).observe($('ltBox'));
+  addEventListener('resize', () => { clearTimeout(LT.rt); LT.rt = setTimeout(ltRequest, 200); });
+})();
+
 function bkBigFill() { // the selected chip, shown large in the page's empty space
   $('bkBook').querySelectorAll('.bk-big').forEach(el => {
     const s = BOOK.sel, h = +el.dataset.h;
