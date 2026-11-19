@@ -1030,12 +1030,17 @@ body:not(.mode-painting) #insideBtn{display:none}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-left{flex-direction:row; gap:12px; align-items:stretch}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-sw{width:150px; min-height:128px}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-where{width:200px; align-self:center}
-  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info{display:grid; grid-template-columns:minmax(210px,1fr) minmax(290px,1.15fr); grid-template-rows:auto 1fr; column-gap:28px; row-gap:10px; padding-right:84px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info{display:grid; grid-template-columns:minmax(170px,1fr) minmax(250px,1.15fr); grid-template-rows:auto 1fr; column-gap:24px; row-gap:10px; padding-right:44px}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > div:first-child{grid-column:1; grid-row:1}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > .pk-acts{grid-column:1; grid-row:2; align-self:end; justify-self:start}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-info > .pk-compmsg{grid-column:1 / -1; grid-row:3}
   body:not(.mode-inside) #treeCard:not(.full) .picked:not(.enlarged) .pk-recipe{grid-column:2; grid-row:1 / span 2; align-self:center}
   body:not(.mode-inside) #treeCard:not(.full) .picked .pk-btns{position:absolute; top:12px; right:12px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked.mix-near:not(.enlarged) .pk-sw{width:110px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked.mix-near:not(.enlarged) .pk-where{width:150px}
+  body:not(.mode-inside) #treeCard:not(.full) .picked.mix-near:not(.enlarged) .pk-info{grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto}
+  body:not(.mode-inside) #treeCard:not(.full) .picked.mix-near:not(.enlarged) .pk-recipe{grid-column:1; grid-row:2}
+  body:not(.mode-inside) #treeCard:not(.full) .picked.mix-near:not(.enlarged) .pk-info > .pk-acts{grid-row:3}
 }
 </style>
 <script>
@@ -2441,7 +2446,7 @@ function showPick(pk, msg) {
   $('pkComp').hidden = !pk; $('pkBrush').hidden = !(pk && pk.px);
   if (!pk) { if (msg) { box.hidden = false; $('pkBody').hidden = true; $('pkMsg').hidden = false; $('pkMsg').textContent = msg; } else box.hidden = true; return; }
   box.hidden = false; $('pkBody').hidden = false; $('pkMsg').hidden = true;
-  $('picked').classList.toggle('has-px', !!pk.px); $('pkWhere').hidden = !pk.px;
+  $('picked').classList.toggle('has-px', !!pk.px); $('picked').classList.remove('mix-near'); $('pkWhere').hidden = !pk.px;
   $('pkGrow').hidden = !pk.px; if (!pk.px) setPickBig(false); else setPickBig(PICK.big);
   $('pkLoad').hidden = false; document.querySelector('#picked .label').textContent = pk.px ? 'From your painting' : 'Picked from the tree';
   if (pk.px) {
@@ -2837,10 +2842,16 @@ $('pkLoad').addEventListener('click', () => { if (!PICK.cur || !PICK.cur.parts) 
 $('mixToTree').addEventListener('click', () => {
   const parts = {}; for (const id in state.mix) if (PIG[id] && state.mix[id] > 0) parts[id] = state.mix[id];
   if (!Object.keys(parts).length) return;
-  if (isPainting()) setTreeMode('palette');
+  // stays in whichever view the tree is in: over a painting, the mix shows among the painting's colors to compare
   const a = analyze(mixR(parts));
   PICK.cur = { parts: { ...parts }, a, p: pt3(a), fromMix: true }; showPick(PICK.cur);
   document.querySelector('#picked .label').textContent = 'Your mix, on the tree';
+  if (isPainting() && PT.dense.length) { // over a painting: how near the mix comes to the painting's own colors, and where that nearest color is
+    let best = null, bd = Infinity; for (const q of PT.dense) { const l = q.m && q.m.lab; if (!l) continue; const d = dE00(a.lab, l); if (d < bd) { bd = d; best = q; } }
+    if (best) { const word = bd < 1.5 ? 'near exact' : bd < 3 ? 'very close' : bd < 6 ? 'close' : 'far off', cls = bd < 3 ? 'fit-good' : bd < 6 ? 'fit-ok' : 'fit-far';
+      $('pkRecipe').insertAdjacentHTML('afterbegin', `<li style="display:block" class="pk-fit">Nearest in the painting · <b class="${cls}">ΔE ${bd.toFixed(1)}, ${word}</b> <span class="pk-mini" style="background:${best.hex}" title="That color in the painting: ${munsellText(best.m)}"></span></li>`);
+      $('picked').classList.add('has-px', 'mix-near'); $('pkWhere').hidden = false; $('pkWhereImg').src = PT.thumb;
+      $('pkWhereDot').style.left = (best.x * 100).toFixed(1) + '%'; $('pkWhereDot').style.top = (best.y * 100).toFixed(1) + '%'; } }
   render();
   const tc = $('treeCard'); if (!tc.classList.contains('full')) reveal(tc);
 });
