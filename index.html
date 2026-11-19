@@ -2843,7 +2843,7 @@ $('mixToTree').addEventListener('click', () => {
   const parts = {}; for (const id in state.mix) if (PIG[id] && state.mix[id] > 0) parts[id] = state.mix[id];
   if (!Object.keys(parts).length) return;
   // stays in whichever view the tree is in: over a painting, the mix shows among the painting's colors to compare
-  const a = analyze(mixR(parts));
+  const a = analyze(mixR(parts)), wasBig = PICK.big; // keep the painting large if it was
   PICK.cur = { parts: { ...parts }, a, p: pt3(a), fromMix: true }; showPick(PICK.cur);
   document.querySelector('#picked .label').textContent = 'Your mix, on the tree';
   if (isPainting() && PT.dense.length) { // over a painting: how near the mix comes to the painting's own colors, and where that nearest color is
@@ -2851,7 +2851,8 @@ $('mixToTree').addEventListener('click', () => {
     if (best) { const word = bd < 1.5 ? 'near exact' : bd < 3 ? 'very close' : bd < 6 ? 'close' : 'far off', cls = bd < 3 ? 'fit-good' : bd < 6 ? 'fit-ok' : 'fit-far';
       $('pkRecipe').insertAdjacentHTML('afterbegin', `<li style="display:block" class="pk-fit">Nearest in the painting · <b class="${cls}">ΔE ${bd.toFixed(1)}, ${word}</b> <span class="pk-mini" style="background:${best.hex}" title="That color in the painting: ${munsellText(best.m)}"></span></li>`);
       $('picked').classList.add('has-px', 'mix-near'); $('pkWhere').hidden = false; $('pkWhereImg').src = PT.thumb;
-      $('pkWhereDot').style.left = (best.x * 100).toFixed(1) + '%'; $('pkWhereDot').style.top = (best.y * 100).toFixed(1) + '%'; } }
+      $('pkWhereDot').style.left = (best.x * 100).toFixed(1) + '%'; $('pkWhereDot').style.top = (best.y * 100).toFixed(1) + '%';
+      $('pkBigDot').style.left = (best.x * 100).toFixed(2) + '%'; $('pkBigDot').style.top = (best.y * 100).toFixed(2) + '%'; $('pkGrow').hidden = false; setPickBig(wasBig); } }
   render();
   const tc = $('treeCard'); if (!tc.classList.contains('full')) reveal(tc);
 });
