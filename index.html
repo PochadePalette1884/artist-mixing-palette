@@ -3513,6 +3513,7 @@ function ltWeights(T) { // the lamp's spectrum relative to daylight (6500 K read
 const ltLinOf = xyz => [3.2406 * xyz[0] - 1.5372 * xyz[1] - 0.4986 * xyz[2], -0.9689 * xyz[0] + 1.8758 * xyz[1] + 0.0415 * xyz[2], 0.0557 * xyz[0] - 0.2040 * xyz[1] + 1.0570 * xyz[2]].map(v => Math.max(0, v));
 const ltCss = (lin, a = 1) => { const m = Math.max(1, ...lin); return `rgba(${lin.map(v => surfEnc(v / m)).join(',')},${a})`; };
 const LT_SPEC = WL.map((l, i) => { const c = ltLinOf(CMF[i]), m = Math.max(...c) || 1; return 'rgb(' + c.map(v => Math.round(255 * Math.pow(v / m, 1 / 2.2))).join(',') + ')'; });
+const LT_SOFT = LT_SPEC.map(c => { const v = c.match(/\d+/g).map(Number); return 'rgb(' + v.map(x => Math.round(x * 0.6 + 235 * 0.4)).join(',') + ')'; }); // softened toward warm white: a haze, not confetti
 function ltKName(K) { return K >= 6000 ? 'daylight' : K >= 4500 ? 'cool white' : K >= 3500 ? 'neutral white' : K >= 2900 ? 'warm white' : 'soft white'; }
 function ltCurrentR() { const ids = Object.keys(state.mix).filter(id => state.mix[id] > 0); return ids.length && pigmentLoad(state.mix) ? filmR(state.mix, GROUND[state.ground].R) : PIG.n5.R; }
 const ltEase = (a, b, s) => Math.min(1, Math.max(0, (s - a) / (b - a)));
@@ -3604,7 +3605,7 @@ function ltDraw() { // everything placed by the slider: 0 lamp off · lamp on ·
   ctx.fillStyle = 'rgba(235,227,207,.7)'; ctx.beginPath(); ctx.arc(ex, ey, 4.5, 0, 7); ctx.fill();
   // the light: a fine mist of every wavelength, batched by color so thousands of grains stay quick to draw
   if (tt > 0) {
-    const AB = [0.3, 0.45, 0.65, 0.95], bins = new Map(), add = (i, a, x0, y0, x1, y1) => { const k = i * 4 + (a < 0.26 ? 0 : a < 0.41 ? 1 : a < 0.65 ? 2 : 3); let b = bins.get(k); if (!b) bins.set(k, b = []); b.push(x0, y0, x1, y1); };
+    const AB = [0.1, 0.15, 0.22, 0.34], bins = new Map(), add = (i, a, x0, y0, x1, y1) => { const k = i * 4 + (a < 0.26 ? 0 : a < 0.41 ? 1 : a < 0.65 ? 2 : 3); let b = bins.get(k); if (!b) bins.set(k, b = []); b.push(x0, y0, x1, y1); };
     for (const q of LT.dots) {
       const d = (tt - q.lag) * LT.speed; if (d <= 0 || d > q.l1 + q.l2) continue;
       if (d <= q.l1) { const d0 = Math.max(0, d - q.len); add(q.i, q.a, q.o[0] + q.dir[0] * d0, q.o[1] + q.dir[1] * d0, q.o[0] + q.dir[0] * d, q.o[1] + q.dir[1] * d); continue; }
@@ -3612,7 +3613,7 @@ function ltDraw() { // everything placed by the slider: 0 lamp off · lamp on ·
       add(q.i, a, q.hp[0] + q.d2[0] * e0, q.hp[1] + q.d2[1] * e0, q.hp[0] + q.d2[0] * e, q.hp[1] + q.d2[1] * e);
     }
     ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineWidth = 1;
-    for (const [k, b] of bins) { ctx.globalAlpha = AB[k % 4]; ctx.strokeStyle = LT_SPEC[k >> 2]; ctx.beginPath(); for (let n = 0; n < b.length; n += 4) { ctx.moveTo(b[n], b[n + 1]); ctx.lineTo(b[n + 2], b[n + 3]); } ctx.stroke(); }
+    for (const [k, b] of bins) { ctx.globalAlpha = AB[k % 4]; ctx.strokeStyle = LT_SOFT[k >> 2]; ctx.beginPath(); for (let n = 0; n < b.length; n += 4) { ctx.moveTo(b[n], b[n + 1]); ctx.lineTo(b[n + 2], b[n + 3]); } ctx.stroke(); }
   }
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   // what the eye receives
