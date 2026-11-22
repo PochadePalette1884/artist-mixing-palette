@@ -251,7 +251,7 @@ body.tree-full{overflow:hidden}
 .bk-book.spread .bk-big .sph{display:none}
 .bk-surf{flex-basis:100%; display:flex; justify-content:flex-start; padding-top:6px}
 .bk-surf .sph-lab{color:var(--muted)} .bk-surf .sph-read{color:var(--ink)}
-.bk-surf .sph{width:min(300px, 100%)}
+.bk-surf .sph{width:min(560px, 100%)} /* the surface sphere is the main study: give it room */
 .bk-vax{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-family:var(--display); font-size:.7rem; letter-spacing:.3em; color:#6f6550}
 .bk-vax span{writing-mode:vertical-rl; transform:rotate(180deg)}
 .bk-vax i, .bk-cax i{display:block; background:#8a7f68}
@@ -778,6 +778,7 @@ html,body{overflow-x:clip} body{margin:0}
 .lt-k input{width:160px}
 .lt-stage{line-height:0}
 #ltCv{width:100%; aspect-ratio:3 / 1; display:block}
+#ltBox{max-width:760px} /* a supporting illustration: kept modest beside the book's sphere */
 .lt-chart{width:100%; height:120px; display:block}
 .lt-rev input{flex:1}
 .lt-steps{display:none}
@@ -3473,13 +3474,13 @@ function surfShade(N0, col, P0, V = [0, 0, 1]) {
   });
 }
 function drawSphere(cv, hex, opt = {}) {
-  const dpr = opt.dpr || Math.min(2, window.devicePixelRatio || 1), W = opt.w || cv.clientWidth || 240, Hh = opt.h || cv.clientHeight || 190;
+  const dpr = opt.dpr || (SURF.fast ? 1 : Math.min(2, window.devicePixelRatio || 1)), W = opt.w || cv.clientWidth || 240, Hh = opt.h || cv.clientHeight || 190;
   cv.width = Math.round(W * dpr); cv.height = Math.round(Hh * dpr);
   const w = cv.width, h = cv.height, ctx = cv.getContext('2d'), img = ctx.createImageData(w, h), d = img.data;
   const col = opt.lin || [1, 3, 5].map(o => surfLin(parseInt(hex.slice(o, o + 2), 16) / 255)), P = surfParams(opt.t != null ? opt.t : SURF.t);
   P.light = opt.light || [1, 1, 1]; const shift = (opt.shift || 0) * w;
   const C = [0, 1.1, 6.4], f = sNorm([0, -0.25 - C[1], -C[2]]), rt = sNorm([-f[2], 0, f[0]]), up = [rt[1] * f[2] - rt[2] * f[1], rt[2] * f[0] - rt[0] * f[2], rt[0] * f[1] - rt[1] * f[0]], tf = 0.25;
-  const SS = opt.ss || (SURF.fast ? 1 : 2); // two-by-two samples per pixel smooth the sphere's edge (one while dragging)
+  const SS = opt.ss || (SURF.fast || dpr >= 2 ? 1 : 2); // two-by-two samples per pixel smooth the sphere's edge (one while dragging)
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     let acc = [0, 0, 0];
     for (let sy = 0; sy < SS; sy++) for (let sx = 0; sx < SS; sx++) {
