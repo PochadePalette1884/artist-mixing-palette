@@ -249,6 +249,21 @@ body.tree-full{overflow:hidden}
 .sph-read b, .bk-big .sph-read b{font:600 .74rem/1.2 var(--body); color:inherit; min-width:62px; letter-spacing:0}
 .sph-read i{width:16px; height:12px; border-radius:2px; border:1px solid rgba(0,0,0,.2); flex:none}
 .bk-book.spread .bk-big .sph{display:none}
+.lv{margin-top:14px; padding-top:12px; border-top:1px solid var(--line, rgba(255,255,255,.1))}
+.lv-bar{display:flex; flex-direction:column; gap:6px; margin-top:6px}
+.lv-wrap{display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; align-items:flex-start}
+.lv-stage{position:relative; flex:0 1 auto; width:fit-content; max-width:min(520px, 100%); line-height:0; border-radius:8px; overflow:hidden; background:#222; cursor:crosshair; touch-action:none}
+.lv-stage video, .lv-stage img{display:block; max-width:100%; max-height:min(60vh, 520px); width:auto; height:auto}
+.lv-cross{position:absolute; width:30px; height:30px; margin:-15px 0 0 -15px; border:2px solid #fff; border-radius:50%; box-shadow:0 0 0 1.5px rgba(0,0,0,.55), inset 0 0 0 1.5px rgba(0,0,0,.55); pointer-events:none; left:50%; top:50%}
+.lv-cross::before, .lv-cross::after{content:''; position:absolute; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.lv-cross::before{left:50%; top:-9px; bottom:-9px; width:2px; margin-left:-1px; clip-path:polygon(0 0,100% 0,100% 30%,0 30%,0 70%,100% 70%,100% 100%,0 100%)}
+.lv-cross::after{top:50%; left:-9px; right:-9px; height:2px; margin-top:-1px; clip-path:polygon(0 0,30% 0,30% 100%,0 100%,0 0,70% 0,100% 0,100% 100%,70% 100%,70% 0)}
+.lv-side{flex:1 1 220px; display:flex; flex-direction:column; gap:10px}
+.lv-read{display:flex; gap:12px; align-items:center}
+.lv-sw{width:64px; height:64px; border-radius:6px; flex:none; background:#555; box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.lv-mun{font-size:1.5rem; color:var(--gold, #d8c08a)}
+.lv-desc{font-size:.85rem; color:var(--muted)}
+.lv-note{font-size:.78rem; color:var(--muted); margin:0}
 .bk-surf{flex-basis:100%; display:flex; justify-content:flex-start; padding-top:6px}
 .bk-surf .sph-lab{color:var(--muted)} .bk-surf .sph-read{color:var(--ink)}
 .bk-surf .sph{width:min(560px, 100%)} /* the surface sphere is the main study: give it room */
@@ -627,6 +642,21 @@ html,body{overflow-x:clip} body{margin:0}
         <div class="coll" id="coll" hidden>
           <div class="coll-head"><span class="label">Collection</span><span class="coll-msg" id="collMsg"></span></div>
           <div class="coll-row" id="collRow" role="list"></div>
+        </div>
+      </div>
+      <div class="lv" id="lvBox">
+        <span class="label">Live view</span>
+        <div class="lv-bar">
+          <span class="pt-stats" id="lvMsg">Point your camera at anything. The crosshair reads its color, marks it on the tree and finds its mix.</span>
+          <div class="pt-btns"><button class="linkbtn" id="lvStart" type="button">Start camera</button><label class="linkbtn" for="lvFile">Use a photo</label><input type="file" id="lvFile" accept="image/*" capture="environment" hidden><button class="linkbtn" id="lvStop" type="button" hidden>Stop</button></div>
+        </div>
+        <div class="lv-wrap" id="lvWrap" hidden>
+          <div class="lv-stage" id="lvStage" aria-label="Tap to move the crosshair"><video id="lvVid" playsinline muted></video><img id="lvImg" alt="Your photo" hidden><span class="lv-cross" id="lvCross" aria-hidden="true"></span></div>
+          <div class="lv-side">
+            <div class="lv-read"><span class="lv-sw" id="lvSw"></span><div><div class="mono lv-mun" id="lvMun">—</div><div class="lv-desc" id="lvDesc">Tap the picture to move the crosshair.</div></div></div>
+            <div class="pt-btns"><button class="linkbtn" id="lvMix" type="button">See mix</button><button class="linkbtn" id="lvHold" type="button">Hold</button><button class="linkbtn" id="lvCal" type="button" title="Put the crosshair on your Neutral 5 card, then tap">Calibrate on N 5</button><button class="linkbtn" id="lvCalOff" type="button" hidden>Clear calibration</button></div>
+            <p class="lv-note" id="lvCalNote">Cameras shift color with their own white balance and exposure. For a truer reading, put the crosshair on a Neutral 5 card in the same light and tap Calibrate on N 5.</p>
+          </div>
         </div>
       </div>
       <div class="tree-bar">
@@ -2203,6 +2233,13 @@ function render() {
     c.lineWidth = 2; c.strokeStyle = ink; c.beginPath(); c.arc(q[0], q[1], r, 0, Math.PI * 2); c.stroke();
     c.beginPath(); [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => { c.moveTo(q[0] + dx * (r + 2), q[1] + dy * (r + 2)); c.lineTo(q[0] + dx * (r + 8), q[1] + dy * (r + 8)); }); c.stroke();
   }
+  // the live view's color: a filled dot in that color, ringed, with a small crosshair
+  if (typeof LIVE !== 'undefined' && LIVE.on && LIVE.a) {
+    const q = proj(pt3(LIVE.a)), r = 7 * q[3] * G + 4;
+    c.fillStyle = LIVE.a.hex; c.beginPath(); c.arc(q[0], q[1], r, 0, Math.PI * 2); c.fill();
+    c.lineWidth = 4; c.strokeStyle = halo; c.stroke(); c.lineWidth = 2; c.strokeStyle = ink; c.stroke();
+    c.beginPath(); [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([dx, dy]) => { c.moveTo(q[0] + dx * (r + 3), q[1] + dy * (r + 3)); c.lineTo(q[0] + dx * (r + 10), q[1] + dy * (r + 10)); }); c.stroke();
+  }
   // a hovered pin from Map the mixes: its color, ringed, with its number
   if (typeof MAPHL !== 'undefined' && MAPHL) {
     const q = proj(MAPHL.p), r = 8 * q[3] * G + 4;
@@ -2444,12 +2481,12 @@ function showPick(pk, msg) {
     const r = box.getBoundingClientRect(); if (r.top > innerHeight - 160) scrollBy({ top: r.top - innerHeight + Math.min(r.height + 24, innerHeight * 0.6), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }, 30);
   if (COMPPATH && COMPPATH.pick && COMPPATH.pick !== pk) clearPickComp(); else if (!COMPPATH || !COMPPATH.pick) resetPickCompUI();
-  $('pkComp').hidden = !pk; $('pkBrush').hidden = !(pk && pk.px);
+  $('pkComp').hidden = !pk; $('pkBrush').hidden = !(pk && pk.px && !pk.px.live);
   if (!pk) { if (msg) { box.hidden = false; $('pkBody').hidden = true; $('pkMsg').hidden = false; $('pkMsg').textContent = msg; } else box.hidden = true; return; }
   box.hidden = false; $('pkBody').hidden = false; $('pkMsg').hidden = true;
   $('picked').classList.toggle('has-px', !!pk.px); $('picked').classList.remove('mix-near'); $('pkWhere').hidden = !pk.px;
-  $('pkGrow').hidden = !pk.px; if (!pk.px) setPickBig(false); else setPickBig(PICK.big);
-  $('pkLoad').hidden = false; document.querySelector('#picked .label').textContent = pk.px ? 'From your painting' : 'Picked from the tree';
+  $('pkGrow').hidden = !pk.px || !!pk.px.live; if (!pk.px || pk.px.live) { const kb = PICK.big; setPickBig(false); if (pk && pk.px) PICK.big = kb; } else setPickBig(PICK.big);
+  $('pkLoad').hidden = false; document.querySelector('#picked .label').textContent = pk.px ? (pk.px.live ? 'From the live view' : 'From your painting') : 'Picked from the tree';
   if (pk.px) {
     const a = pk.a; $('pkSw').style.background = a.hex; $('pkHex').textContent = a.hex.toUpperCase(); $('pkNote').textContent = munsellText(a);
     const hn = a.chroma < 0.6 ? null : hueName(a.hue);
@@ -2457,7 +2494,7 @@ function showPick(pk, msg) {
     // closest mix from the palette, found once per picked pixel
     if (pk.px.recFor !== state.palette) { pk.px.rec = findRecipe(a.lab, new Set(active())); pk.px.recFor = state.palette; } // recomputed when the palette changes
     const rec = pk.px.rec; pk.parts = rec ? rec.parts : null;
-    $('pkWhereImg').src = PT.thumb; $('pkWhereDot').style.left = (pk.px.x * 100).toFixed(1) + '%'; $('pkWhereDot').style.top = (pk.px.y * 100).toFixed(1) + '%';
+    $('pkWhereImg').src = pk.px.shot || PT.thumb; $('pkWhereDot').style.left = (pk.px.x * 100).toFixed(1) + '%'; $('pkWhereDot').style.top = (pk.px.y * 100).toFixed(1) + '%';
     $('pkBigDot').style.left = (pk.px.x * 100).toFixed(2) + '%'; $('pkBigDot').style.top = (pk.px.y * 100).toFixed(2) + '%';
     const where = '';
     if (!rec) { $('pkRecipe').innerHTML = where; $('pkLoad').hidden = true; $('pkComp').hidden = true; return; }
@@ -4132,6 +4169,98 @@ function brushSummary(pts) {
   });
   window.addEventListener('resize', () => { if (!$('brushBox').hidden) brushDraw(); });
 })();
+
+// ---- Live view: a camera (or a photo) with a crosshair that reads color, marks it on the tree and finds its mix ----
+var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin: null, src: null, stream: null, last: 0 };
+(() => {
+  const vid = $('lvVid'), img = $('lvImg'), stage = $('lvStage'), cross = $('lvCross'), work = document.createElement('canvas'), wctx = work.getContext('2d', { willReadFrequently: true });
+  const toLin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }, toS = v => { v = Math.max(0, Math.min(1, v)); return Math.round(255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); };
+  const N5 = toLin(119); // Neutral 5 (N 5/) on screen: about #777777
+  const msg = t => { $('lvMsg').textContent = t; };
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent), safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const CAM_BLOCKED = ios ? 'Camera access is off for this site. On iPhone or iPad: tap “aA” in the address bar, then Website Settings, set Camera to Allow, and tap Start camera again.'
+    : safari ? 'Camera access is off for this site. In Safari: Settings for This Website (Safari menu), set Camera to Allow, then tap Start camera again.'
+    : 'Camera access is off for this site. Click the camera or lock icon at the left of the address bar, set Camera to Allow, reload the page, and tap Start camera again.';
+  const placeCross = () => { cross.style.left = (LIVE.fx * 100) + '%'; cross.style.top = (LIVE.fy * 100) + '%'; };
+  function sampleLin() { // average a small patch around the crosshair, in linear light
+    const el = LIVE.src; if (!el) return null;
+    const sw = el.videoWidth || el.naturalWidth, sh = el.videoHeight || el.naturalHeight; if (!sw || !sh) return null;
+    const W = 320, H = Math.round(W * sh / sw); if (work.width !== W || work.height !== H) { work.width = W; work.height = H; }
+    wctx.drawImage(el, 0, 0, W, H);
+    const cx = Math.round(LIVE.fx * W), cy = Math.round(LIVE.fy * H), R = 3, d = wctx.getImageData(Math.max(0, cx - R), Math.max(0, cy - R), R * 2 + 1, R * 2 + 1).data, s = [0, 0, 0];
+    let n = 0; for (let i = 0; i < d.length; i += 4) { s[0] += toLin(d[i]); s[1] += toLin(d[i + 1]); s[2] += toLin(d[i + 2]); n++; }
+    return n ? s.map(v => v / n) : null;
+  }
+  function read(force) {
+    if (LIVE.held && !force) return;
+    const s = sampleLin(); if (!s) return;
+    LIVE.raw = s;
+    const k = LIVE.lin && !force ? 0.35 : 1; LIVE.lin = LIVE.lin ? LIVE.lin.map((v, i) => v + (s[i] - v) * k) : s; // a little smoothing against sensor noise
+    const g = LIVE.gain || [1, 1, 1], rgb = LIVE.lin.map((v, i) => toS(v * g[i]));
+    const a = munsellOfRgb(rgb); LIVE.a = a;
+    $('lvSw').style.background = a.hex; $('lvMun').textContent = munsellText(a);
+    const hn = a.chroma < 0.6 ? null : hueName(a.hue);
+    $('lvDesc').textContent = `${hn ? FAMNAMES[hn.fam] : 'neutral grey'} · value ${a.V.toFixed(1)} · chroma ${Math.round(a.chroma)} · ${a.hex.toUpperCase()}`;
+    render();
+  }
+  function tick(t) {
+    if (!LIVE.on || LIVE.src !== vid) return;
+    if (t - LIVE.last > 220) { LIVE.last = t; read(); }
+    requestAnimationFrame(tick);
+  }
+  function open(src) {
+    LIVE.on = true; LIVE.src = src; LIVE.lin = null; LIVE.held = false; $('lvHold').textContent = 'Hold';
+    $('lvWrap').hidden = false; $('lvStop').hidden = false; vid.hidden = src !== vid; img.hidden = src !== img; placeCross();
+  }
+  function stop() {
+    if (LIVE.stream) { LIVE.stream.getTracks().forEach(t => t.stop()); LIVE.stream = null; }
+    LIVE.on = false; LIVE.a = null; LIVE.src = null; vid.srcObject = null;
+    $('lvWrap').hidden = true; $('lvStop').hidden = true; $('lvStart').textContent = 'Start camera';
+    msg('Point your camera at anything. The crosshair reads its color, marks it on the tree and finds its mix.'); render();
+  }
+  $('lvStart').addEventListener('click', async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg('This browser cannot open a camera here. Use a photo instead.'); return; }
+    let perm = null; try { perm = (await navigator.permissions.query({ name: 'camera' })).state; } catch (e) {}
+    if (perm === 'denied') { msg(CAM_BLOCKED); return; } // the browser will not ask again once refused: say how to turn it back on
+    msg(perm === 'granted' ? 'Opening the camera…' : 'Your browser will now ask to use the camera. Choose Allow.');
+    try {
+      if (LIVE.stream) LIVE.stream.getTracks().forEach(t => t.stop());
+      const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false });
+      LIVE.stream = st; vid.srcObject = st; await vid.play(); open(vid); $('lvStart').textContent = 'Restart camera';
+      msg('Live. Tap the picture to move the crosshair.'); requestAnimationFrame(tick);
+    } catch (e) {
+      const inFrame = window.top !== window.self;
+      msg(inFrame ? 'The camera is not available in this preview: claude.ai does not let a page use it. Open your site to use the live camera, or use a photo here.' : e && e.name === 'NotAllowedError' ? CAM_BLOCKED : e && e.name === 'NotFoundError' ? 'No camera was found on this device. Use a photo instead.' : 'The camera could not start. Close other apps using it and try again, or use a photo.');
+    }
+  });
+  $('lvFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (LIVE.stream) { LIVE.stream.getTracks().forEach(t => t.stop()); LIVE.stream = null; }
+    const url = URL.createObjectURL(f); img.onload = () => { open(img); read(true); msg('Tap the photo to move the crosshair.'); }; img.src = url; e.target.value = '';
+  });
+  $('lvStop').addEventListener('click', stop);
+  const move = e => { const r = (LIVE.src || stage).getBoundingClientRect(); LIVE.fx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); LIVE.fy = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)); placeCross(); LIVE.lin = null; read(true); };
+  let drag = false;
+  stage.addEventListener('pointerdown', e => { drag = true; stage.setPointerCapture(e.pointerId); move(e); });
+  stage.addEventListener('pointermove', e => { if (drag) move(e); });
+  stage.addEventListener('pointerup', () => { drag = false; });
+  $('lvHold').addEventListener('click', () => { LIVE.held = !LIVE.held; $('lvHold').textContent = LIVE.held ? 'Resume' : 'Hold'; if (LIVE.held && LIVE.src === vid) vid.pause(); else if (LIVE.src === vid) { vid.play(); requestAnimationFrame(tick); } });
+  $('lvCal').addEventListener('click', () => { // the crosshair is on a Neutral 5 card: scale each channel so it reads exactly N 5/
+    const s = sampleLin(); if (!s || s.some(v => v <= 0.002)) { $('lvCalNote').textContent = 'Too dark to calibrate. Put the crosshair on the Neutral 5 card in good light.'; return; }
+    LIVE.gain = s.map(v => N5 / v); LIVE.lin = null; read(true); $('lvCalOff').hidden = false;
+    $('lvCalNote').textContent = 'Calibrated on N 5 in this light. Recalibrate if the light or the camera changes.';
+  });
+  $('lvCalOff').addEventListener('click', () => { LIVE.gain = null; LIVE.lin = null; read(true); $('lvCalOff').hidden = true; $('lvCalNote').textContent = 'Calibration cleared. Readings are the camera’s own again.'; });
+  $('lvMix').addEventListener('click', () => { // the closest mix from the current palette, in the window under the tree
+    if (!LIVE.a) return; const a = LIVE.a;
+    let shot = ''; try { const c = document.createElement('canvas'), el = LIVE.src, sw = el.videoWidth || el.naturalWidth, sh = el.videoHeight || el.naturalHeight; c.width = 360; c.height = Math.round(360 * sh / sw); c.getContext('2d').drawImage(el, 0, 0, c.width, c.height); shot = c.toDataURL('image/jpeg', 0.8); } catch (e) {}
+    PICK.cur = { a, p: pt3(a), px: { x: LIVE.fx, y: LIVE.fy, m: a, p: pt3(a), hex: a.hex, live: true, shot } }; showPick(PICK.cur);
+    if (!shot) $('pkWhere').hidden = true;
+    render(); reveal($('picked'));
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && LIVE.stream) { $('lvHold').textContent = 'Hold'; LIVE.held = false; } });
+})();
+
 </script>
 
 </body>
