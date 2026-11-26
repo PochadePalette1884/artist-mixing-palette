@@ -569,7 +569,7 @@ html,body{overflow-x:clip} body{margin:0}
 
   <div class="main">
     <section class="card" aria-label="Mixer">
-      <div class="card-head"><h2>The mix</h2><div style="display:flex;gap:8px;align-items:center"><button class="x" id="mixToTree" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem" title="Find this mix on the Munsell tree">See where it sits</button><button class="x" id="clearMix" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Clear</button></div></div>
+      <div class="card-head"><h2>The mix</h2><div style="display:flex;gap:8px;align-items:center"><button class="x" id="mixShare" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem" title="Make an image of this mix to share">Share</button><button class="x" id="mixToTree" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem" title="Find this mix on the Munsell tree">See where it sits</button><button class="x" id="clearMix" style="width:auto;padding:0 12px;border-radius:999px;font-size:.8rem">Clear</button></div></div>
       <div class="swatch-row">
         <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
           <div class="big" id="bigSw" role="img" aria-label="Drawdown of the mix over the ground and a black stripe">
@@ -724,7 +724,7 @@ html,body{overflow-x:clip} body{margin:0}
   <section class="card studio" id="studioCard" aria-label="AMP Studio" hidden>
     <div class="card-head"><h2>AMP Studio</h2><span class="label" id="stLabel">Members</span></div>
     <div id="stOut" class="st-out"><p class="st-pitch"><strong class="st-lead">Join early, free.</strong> Create a private account to save your palette, upload your artwork, and explore the color clouds in your own paintings. This is the start of a membership community, with new content arriving regularly. Founding members help shape it.</p>
-      <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button></div></div>
+      <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button><button class="st-link st-rules" type="button" data-rules>Community Guidelines</button></div></div>
     <div id="stIn" class="st-in" hidden>
       <button class="st-arr" type="button" data-scroll="-1" aria-label="Earlier videos" hidden>‹</button>
       <div class="st-row" id="stList" tabindex="0" aria-label="Studio videos"></div>
@@ -817,10 +817,41 @@ html,body{overflow-x:clip} body{margin:0}
     <p class="auth-why" id="authWhy" hidden></p>
     <label class="auth-f" id="authEmailF"><span>Email</span><input type="email" id="authEmail" autocomplete="email" required></label>
     <label class="auth-f" id="authPassF"><span>Password</span><input type="password" id="authPass" autocomplete="current-password" minlength="8" required></label>
+    <label class="auth-agree" id="authAgreeF" hidden><input type="checkbox" id="authAgree"><span>I agree to the <button class="st-link" type="button" data-rules>Community Guidelines</button></span></label>
     <p class="auth-msg" id="authMsg" role="status"></p>
     <button class="st-btn auth-go" type="submit" id="authGo">Sign in</button>
     <div class="auth-alt" id="authAlt"></div>
   </form>
+</dialog>
+
+<dialog class="auth shr" id="shareDlg" aria-labelledby="shareTitle">
+  <div class="shr-in">
+    <button class="x auth-x" type="button" id="shareClose" aria-label="Close">×</button>
+    <h2 id="shareTitle">Share your mix</h2>
+    <img id="shareImg" alt="Your mix on the Munsell tree, ready to share">
+    <p class="shr-note" id="shareNote">On a phone, Share opens Instagram, Facebook, Messages and more.</p>
+    <div class="shr-acts"><button class="st-btn" type="button" id="shareGo">Share</button><button class="st-link" type="button" id="shareSave">Save image</button><button class="st-link" type="button" id="shareCopy">Copy caption</button></div>
+  </div>
+</dialog>
+<dialog class="auth rules" id="rulesDlg" aria-labelledby="rulesTitle">
+  <div class="rules-in">
+    <button class="x auth-x" type="button" id="rulesClose" aria-label="Close">×</button>
+    <h2 id="rulesTitle">Community Guidelines</h2>
+    <p class="rules-sub">A few simple promises that keep this a good place to learn, for everyone.</p>
+    <ol class="rules-list">
+      <li><b>Be kind.</b> Critique the painting, never the person.</li>
+      <li><b>Share your own work.</b> Upload only images you made or have permission to use. You keep all rights to your work.</li>
+      <li><b>Keep it safe.</b> No harassment, hate or explicit content, and no one else’s personal details.</li>
+      <li><b>Respect the teaching.</b> Studio videos and lessons are for your own learning. Please don’t copy, record, share or resell them.</li>
+      <li><b>Color is a guide.</b> Readings depend on screens, cameras and light. Use them alongside your own eye.</li>
+      <li><b>Your privacy.</b> Your account keeps only your email, to sign you in. It is never sold or shared. Paintings you upload stay on your own device.</li>
+      <li><b>13 or older.</b> You must be at least 13 to create an account.</li>
+      <li><b>A growing community.</b> Features and membership may change as the platform grows. Members will be told before any paid plan begins.</li>
+      <li><b>Fair play.</b> Content or accounts that break these guidelines may be removed.</li>
+    </ol>
+    <p class="rules-sub">Last updated November 2026.</p>
+    <button class="st-btn" type="button" id="rulesOk">Close</button>
+  </div>
 </dialog>
 
 <style id="studio-css">
@@ -958,6 +989,25 @@ body.mix-empty .hvc{display:none}
 .auth-f input{font:inherit; font-size:1rem; color:var(--ink); background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px}
 .auth-f input:focus{outline:2px solid var(--ink); outline-offset:1px}
 .auth-msg{margin:0; min-height:1.2em; font-size:.86rem}
+.auth-agree{display:flex; gap:10px; align-items:flex-start; font-size:.9rem; color:var(--muted); cursor:pointer}
+.auth-agree input{width:20px; height:20px; margin:1px 0 0; accent-color:var(--gold, #d8c08a); flex:none}
+.auth-agree .st-link{font-size:inherit; padding:0}
+.rules{background:#fff; color:#222; border-color:#ddd; width:min(460px, calc(100vw - 32px))}
+.rules .rules-in{display:flex; flex-direction:column; gap:10px; padding:20px 22px; position:relative; font:13.5px/1.5 -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif}
+.rules h2{margin:0 36px 0 0; font:600 17px/1.3 -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif; color:#111; letter-spacing:0}
+.rules .auth-x{color:#555; border-color:#ccc; background:#fff}
+.rules .st-btn{background:#f2f2f2; color:#222; border:1px solid #ccc; font:500 13.5px system-ui, sans-serif; padding:8px 18px; min-height:36px}
+.rules-sub{margin:0; color:#666; font-size:12.5px}
+.rules-list{margin:0; padding-left:1.3em; display:flex; flex-direction:column; gap:6px}
+.rules-list b{color:#111; font-weight:600}
+.rules .st-btn{align-self:flex-start}
+.st-rules{font-size:.82rem}
+.shr{width:min(560px, calc(100vw - 24px))}
+.shr .shr-in{display:flex; flex-direction:column; gap:12px; padding:22px; position:relative}
+.shr h2{margin:0 36px 0 0}
+.shr img{width:100%; height:auto; border-radius:10px; display:block; background:#474747}
+.shr-note{margin:0; font-size:.82rem; color:var(--muted)}
+.shr-acts{display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center}
 .auth-msg.err{color:#e7a08f}
 .auth-go{align-self:stretch; margin-top:4px}
 .auth-alt{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:.86rem}
@@ -1435,7 +1485,7 @@ const STUDIO = {
     this.mode = mode; const d = $('authDlg');
     const T = { in: ['Sign in', 'Sign in'], up: ['Create a free account', 'Create account'], forgot: ['Reset your password', 'Send reset link'], reset: ['Set a new password', 'Save password'] }[mode];
     $('authTitle').textContent = T[0]; $('authGo').textContent = T[1]; $('authGo').disabled = false;
-    $('authEmailF').hidden = mode === 'reset'; $('authPassF').hidden = mode === 'forgot';
+    $('authEmailF').hidden = mode === 'reset'; $('authPassF').hidden = mode === 'forgot'; $('authAgreeF').hidden = mode !== 'up'; $('authAgree').checked = false;
     $('authPass').autocomplete = mode === 'in' ? 'current-password' : 'new-password'; $('authPass').value = '';
     $('authPassF').querySelector('span').textContent = mode === 'in' ? 'Password' : mode === 'reset' ? 'New password (8 or more characters)' : 'Password (8 or more characters)';
     if (why !== undefined) { $('authWhy').textContent = why || ''; $('authWhy').hidden = !why; }
@@ -1452,6 +1502,7 @@ const STUDIO = {
     if (mode !== 'reset' && !/^\S+@\S+\.\S+$/.test(email)) return this.msg('Please enter your email address.', true);
     if (mode !== 'forgot' && mode !== 'in' && pass.length < 8) return this.msg('Use at least 8 characters for the password.', true);
     if (mode === 'in' && !pass) return this.msg('Please enter your password.', true);
+    if (mode === 'up' && !$('authAgree').checked) return this.msg('Please read and agree to the Community Guidelines.', true);
     $('authGo').disabled = true; this.msg('One moment…');
     const back = shareBase();
     try {
@@ -1460,7 +1511,7 @@ const STUDIO = {
         if (error) throw error;
         $('authDlg').close();
       } else if (mode === 'up') {
-        const { data, error } = await this.sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: back } });
+        const { data, error } = await this.sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: back, data: { guidelines: '2026-11', agreed_at: new Date().toISOString() } } });
         if (error) throw error;
         if (data.session) $('authDlg').close();
         else this.msg('Almost there. Check your email for a confirmation link, then come back and sign in.');
@@ -1524,6 +1575,7 @@ const STUDIO = {
     document.addEventListener('click', e => { if (!e.target.closest('#acct')) $('acctMenu').hidden = true; });
     $('acctOut').addEventListener('click', async () => { $('acctMenu').hidden = true; if (this.sb) await this.sb.auth.signOut(); });
     document.addEventListener('click', e => {
+      if (e.target.closest('[data-rules]')) return; // the guidelines open on their own (below)
       const a = e.target.closest('[data-auth]'); if (a) { this.open(a.dataset.auth, a.closest('#authDlg') ? undefined : ''); return; }
       if (e.target.closest('[data-go-studio]')) { $('acctMenu').hidden = true; $('studioCard').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
       const v = e.target.closest('[data-vid]'); if (v) this.play(+v.dataset.vid);
@@ -4309,6 +4361,100 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
     d.querySelector('button').onclick = function(){ d.remove(); try { localStorage.setItem('amp-a2hs-seen', '1'); } catch (e) {} };
     document.body.appendChild(d);
   }, 4000);
+})();
+</script>
+<script>
+(function(){ var d = document.getElementById('rulesDlg'); if (!d) return;
+  ['rulesClose','rulesOk'].forEach(function(id){ document.getElementById(id).addEventListener('click', function(){ d.close(); }); });
+  d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
+  document.addEventListener('click', function(e){ if (e.target.closest('[data-rules]')) { e.preventDefault(); if (!d.open) d.showModal(); } });
+})();
+</script>
+
+<script>
+// Share: a square picture of the mix on the tree, with its notation and recipe, ready for social media
+(function(){
+  var SITE = 'www.artistsmixingpalette.com', d = document.getElementById('shareDlg'); if (!d) return;
+  var blob = null, caption = '', hero = null;
+  try { var bgi = getComputedStyle(document.querySelector('.hero-img')).backgroundImage, mu = bgi && bgi.match(/url\(["']?(.*?)["']?\)$/); if (mu) { hero = new Image(); hero.src = mu[1]; } } catch (e) {}
+  function trimBox(cv){ // the part of the tree canvas that has something drawn on it
+    var c = cv.getContext('2d'), w = cv.width, h = cv.height, data;
+    try { data = c.getImageData(0, 0, w, h).data; } catch (e) { return [0, 0, w, h]; }
+    var x0 = w, y0 = h, x1 = 0, y1 = 0, s = Math.max(1, Math.round(w / 400));
+    var br = data[0], bgc = data[1], bb = data[2], ba = data[3]; // the background, from the corner
+    for (var y = 0; y < h; y += s) for (var x = 0; x < w; x += s) { var i = (y * w + x) * 4; if (Math.abs(data[i] - br) + Math.abs(data[i + 1] - bgc) + Math.abs(data[i + 2] - bb) + Math.abs(data[i + 3] - ba) > 30) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    var m = Math.round(w * 0.01); return x1 > x0 ? [Math.max(0, x0 - m), Math.max(0, y0 - m), Math.min(w, x1 + m) - Math.max(0, x0 - m), Math.min(h, y1 + m) - Math.max(0, y0 - m)] : [0, 0, w, h];
+  }
+  function build(){
+    var parts = state.mix, ids = Object.keys(parts).filter(function(k){ return parts[k] > 0; });
+    if (!ids.length) return null;
+    try { render(); } catch (e) {}
+    var a = analyze(mixR(parts)), S = 1080, c = document.createElement('canvas'); c.width = c.height = S; var x = c.getContext('2d');
+    var body = '"Karla", system-ui, sans-serif', mono = '"JetBrains Mono", ui-monospace, monospace', disp = '"Cormorant Garamond", Georgia, serif';
+    x.fillStyle = '#474747'; x.fillRect(0, 0, S, S);
+    // the tree, trimmed to what is drawn and fitted into the left of the card
+    var tc = document.getElementById('wheel'), b = trimBox(tc), bw = 670, bh = 760, k = Math.min(bw / b[2], bh / b[3]), dw = b[2] * k, dh = b[3] * k;
+    x.drawImage(tc, b[0], b[1], b[2], b[3], 20 + (bw - dw) / 2, 50 + (bh - dh) / 2, dw, dh);
+    // right: swatch, notation, recipe
+    var X = 712, W = S - 40 - X;
+    x.fillStyle = a.hex; x.beginPath(); if (x.roundRect) x.roundRect(X, 70, W, 220, 18); else x.rect(X, 70, W, 220); x.fill();
+    x.fillStyle = '#d8c08a'; x.font = '700 20px ' + body; x.fillText('MY MIX', X, 340);
+    x.font = '500 46px ' + mono; x.fillText(munsellText(a), X, 396);
+    var hn = a.chroma < 0.6 ? null : hueName(a.hue);
+    x.fillStyle = '#bfb6a4'; x.font = '21px ' + body; x.fillText((hn ? FAMNAMES[hn.fam] : 'neutral grey') + ' · value ' + a.V.toFixed(1) + ' · chroma ' + Math.round(a.chroma), X, 432);
+    var tot = ids.reduce(function(s, id){ return s + parts[id]; }, 0), y = 500, lines = [];
+    ids.sort(function(m, n){ return parts[n] - parts[m]; }).slice(0, 7).forEach(function(id){
+      var q = PIG[id], pct = Math.round(parts[id] / tot * 100) + '%'; lines.push(q.name + ' ' + pct);
+      x.fillStyle = analyze(q.R).hex; x.beginPath(); x.arc(X + 11, y - 7, 11, 0, 7); x.fill();
+      x.fillStyle = '#ece6d8'; x.font = '21px ' + body; x.textAlign = 'left'; x.fillText(q.name, X + 34, y);
+      x.fillStyle = '#bfb6a4'; x.textAlign = 'right'; x.fillText(pct, S - 40, y); x.textAlign = 'left'; y += 42;
+    });
+    // footer band: the name and the address, so every share leads back here
+    // banner: grey, with the paints of the current palette lined up along its top edge, as on the board
+    var BH = 200, BY = S - BH;
+    x.fillStyle = '#3a3a3a'; x.fillRect(0, BY, S, BH);
+    var dabs = Array.prototype.slice.call(document.querySelectorAll('#dabs .dab img')).filter(function(im){ return im.complete && im.naturalWidth; });
+    if (dabs.length) { // the paints arc in a bow across the card, the way they sit around the rim of a palette
+      var n = dabs.length, ps = Math.max(48, Math.min(86, 1500 / n)), cxA = S / 2, span = S - 120 - ps, rise = 120, baseY = BY + 8;
+      dabs.forEach(function(im, i){
+        var t = n === 1 ? 0.5 : i / (n - 1), u = (t - 0.5) * 2, px = cxA + u * span / 2, py = baseY - rise * (1 - u * u), ang = Math.atan(2 * rise * u / (span / 2)) * 0.6;
+        x.save(); x.translate(px, py); x.rotate(ang); x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 10; x.shadowOffsetY = 4; x.drawImage(im, -ps / 2, -ps / 2, ps, ps); x.restore();
+      });
+    }
+    x.fillStyle = '#f1e6cc'; x.font = '600 48px ' + disp; x.fillText("Artist\u2019s Mixing Palette", 40, S - 64);
+    x.font = 'italic 500 27px ' + disp; x.fillStyle = '#d8c08a'; x.fillText('Munsell System', 42, S - 26);
+    x.textAlign = 'right'; x.fillStyle = '#d8c08a'; x.font = '700 17px ' + body; try { x.letterSpacing = '3px'; } catch (e) {}
+    x.fillText('PIGMENT MIXING \u00b7 MUNSELL NOTATION', S - 37, S - 74); try { x.letterSpacing = '0px'; } catch (e) {}
+    x.fillStyle = '#ece6d8'; x.font = '500 24px ' + body; x.fillText(SITE, S - 40, S - 30); x.textAlign = 'left';
+    caption = 'My mix: ' + munsellText(a) + ' — ' + lines.join(', ') + '. Mixed with the Artist’s Mixing Palette: ' + SITE;
+    return c;
+  }
+  function note(t){ document.getElementById('shareNote').textContent = t; }
+  document.getElementById('mixShare').addEventListener('click', function(){
+    var c = build(); if (!c) return;
+    document.getElementById('shareImg').src = c.toDataURL('image/png'); blob = null;
+    c.toBlob(function(bl){ blob = bl; }, 'image/png');
+    var file = null; try { file = new File([new Blob()], 'x.png', { type: 'image/png' }); } catch (e) {}
+    var canShare = !!(navigator.share && navigator.canShare && file && navigator.canShare({ files: [file] }));
+    document.getElementById('shareGo').hidden = !canShare;
+    note(canShare ? 'Share opens Instagram, Facebook, Messages and more. The caption is copied too, ready to paste.' : 'Save the image, then post it with the copied caption. On a phone, you can also press and hold the picture to save it.');
+    if (!d.open) d.showModal();
+  });
+  function copyCaption(){ try { navigator.clipboard.writeText(caption); return true; } catch (e) { return false; } }
+  document.getElementById('shareGo').addEventListener('click', function(){
+    if (!blob) return; copyCaption();
+    var f = new File([blob], 'my-mix.png', { type: 'image/png' });
+    navigator.share({ files: [f], text: caption }).catch(function(){});
+  });
+  document.getElementById('shareSave').addEventListener('click', function(){
+    if (!blob) return; copyCaption();
+    var u = URL.createObjectURL(blob), l = document.createElement('a'); l.href = u; l.download = 'my-mix.png'; document.body.appendChild(l); l.click(); l.remove();
+    setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+    note('Image saved, and the caption is copied, ready to paste with your post.');
+  });
+  document.getElementById('shareCopy').addEventListener('click', function(){ note(copyCaption() ? 'Caption copied: ' + caption : caption); });
+  document.getElementById('shareClose').addEventListener('click', function(){ d.close(); });
+  d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
 })();
 </script>
 
