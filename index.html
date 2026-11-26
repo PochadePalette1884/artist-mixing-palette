@@ -721,28 +721,6 @@ html,body{overflow-x:clip} body{margin:0}
     <ol class="mp-list" id="mpList"></ol>
   </section>
 
-  <section class="card" aria-label="Mixing string">
-    <div class="card-head"><h2>Mixing string</h2><span class="label" id="strLabel">Ten steps between two pigments</span></div>
-    <div class="string-head">
-      <span class="srcsw" role="group" aria-label="String between"><button id="strModePig" aria-pressed="true">Pigments</button><button id="strModeNot" aria-pressed="false">Notations</button></span>
-      <span class="str-pig"><select id="strA" aria-label="First pigment"></select>
-      <span class="mono" style="color:var(--muted)">→</span>
-      <select id="strB" aria-label="Second pigment"></select></span>
-      <span class="str-not" hidden><input id="notA" class="notin" type="text" value="7.5R 4/12" spellcheck="false" autocomplete="off" aria-label="First Munsell notation" placeholder="e.g. 5R 4/14">
-      <span class="mono" style="color:var(--muted)">→</span>
-      <input id="notB" class="notin" type="text" value="5BG 6/6" spellcheck="false" autocomplete="off" aria-label="Second Munsell notation" placeholder="e.g. 5BG 6/6">
-      <span class="srcsw" role="group" aria-label="Path between the notations"><button id="notPathLine" aria-pressed="true" title="A straight line through the color solid: complements pass through grey">Straight</button><button id="notPathHue" aria-pressed="false" title="Around the hue circle, keeping chroma up">Around the hues</button></span></span>
-      <span class="hint" id="strHint">Tap any chip to load it into the mixer.</span>
-    </div>
-    <div class="hint" id="notMsg" hidden></div>
-    <div>
-      <div class="string" id="string1"></div>
-      <div class="rowlab" id="row2lab">Each step with an equal amount of Titanium White</div>
-      <div class="string" id="string2"></div>
-      <div class="swipe">Swipe the chips sideways to see all eleven steps.</div>
-    </div>
-  </section>
-
   <section class="card studio" id="studioCard" aria-label="AMP Studio" hidden>
     <div class="card-head"><h2>AMP Studio</h2><span class="label" id="stLabel">Members</span></div>
     <div id="stOut" class="st-out"><p class="st-pitch">A free account opens the palette builder and the AMP Studio video library, where Michael shows how he uses this palette in his own painting.</p>
@@ -771,6 +749,28 @@ html,body{overflow-x:clip} body{margin:0}
       <div class="bk-surf" id="bkSurf" hidden></div>
     </div>
     <p class="hint" style="margin:0">Each page holds one hue, with value rising from 1 to 9 and chroma stepping out by 2 from the neutral. The chips are converted from the Munsell renotation data (the 1943 measurements behind modern Munsell books), and a page shows only what a screen can display; the colors are a guide, not a substitute for a physical Munsell book.</p>
+  </section>
+
+  <section class="card" aria-label="Mixing string">
+    <div class="card-head"><h2>Mixing string</h2><span class="label" id="strLabel">Ten steps between two pigments</span></div>
+    <div class="string-head">
+      <span class="srcsw" role="group" aria-label="String between"><button id="strModePig" aria-pressed="true">Pigments</button><button id="strModeNot" aria-pressed="false">Notations</button></span>
+      <span class="str-pig"><select id="strA" aria-label="First pigment"></select>
+      <span class="mono" style="color:var(--muted)">→</span>
+      <select id="strB" aria-label="Second pigment"></select></span>
+      <span class="str-not" hidden><input id="notA" class="notin" type="text" value="7.5R 4/12" spellcheck="false" autocomplete="off" aria-label="First Munsell notation" placeholder="e.g. 5R 4/14">
+      <span class="mono" style="color:var(--muted)">→</span>
+      <input id="notB" class="notin" type="text" value="5BG 6/6" spellcheck="false" autocomplete="off" aria-label="Second Munsell notation" placeholder="e.g. 5BG 6/6">
+      <span class="srcsw" role="group" aria-label="Path between the notations"><button id="notPathLine" aria-pressed="true" title="A straight line through the color solid: complements pass through grey">Straight</button><button id="notPathHue" aria-pressed="false" title="Around the hue circle, keeping chroma up">Around the hues</button></span></span>
+      <span class="hint" id="strHint">Tap any chip to load it into the mixer.</span>
+    </div>
+    <div class="hint" id="notMsg" hidden></div>
+    <div>
+      <div class="string" id="string1"></div>
+      <div class="rowlab" id="row2lab">Each step with an equal amount of Titanium White</div>
+      <div class="string" id="string2"></div>
+      <div class="swipe">Swipe the chips sideways to see all eleven steps.</div>
+    </div>
   </section>
 
   <section class="card" id="waveCard" aria-label="Wavelength">
