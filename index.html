@@ -839,15 +839,15 @@ html,body{overflow-x:clip} body{margin:0}
     <h2 id="rulesTitle">Community Guidelines</h2>
     <p class="rules-sub">A few simple promises that keep this a good place to learn, for everyone.</p>
     <ol class="rules-list">
-      <li><b>Be kind.</b> Critique the painting, never the person.</li>
-      <li><b>Share your own work.</b> Upload only images you made or have permission to use. You keep all rights to your work.</li>
-      <li><b>Keep it safe.</b> No harassment, hate or explicit content, and no one else’s personal details.</li>
-      <li><b>Respect the teaching.</b> Studio videos and lessons are for your own learning. Please don’t copy, record, share or resell them.</li>
-      <li><b>Color is a guide.</b> Readings depend on screens, cameras and light. Use them alongside your own eye.</li>
-      <li><b>Your privacy.</b> Your account keeps only your email, to sign you in. It is never sold or shared. Paintings you upload stay on your own device.</li>
-      <li><b>13 or older.</b> You must be at least 13 to create an account.</li>
-      <li><b>A growing community.</b> Features and membership may change as the platform grows. Members will be told before any paid plan begins.</li>
-      <li><b>Fair play.</b> Content or accounts that break these guidelines may be removed.</li>
+      <li><b>Respect One Another</b><br>Be kind, constructive, and considerate.</li>
+      <li><b>Share Original Work</b><br>Share paintings, studies, and creative work that you have made yourself or have permission to share. You retain ownership and copyright of your artwork.</li>
+      <li><b>Maintain a Safe Environment</b><br>Harassment, hate speech, discrimination, explicit content, and abusive behavior are not permitted.</li>
+      <li><b>Respect Educational Content</b><br>Our lessons, demonstrations, studio videos, and other educational materials are provided for your personal learning and development. Please do not copy, download, record, redistribute, publish, or resell this material without written permission.</li>
+      <li><b>Understand the Nature of Color</b><br>Color readings, digital palettes, and mixing references are educational tools, not absolute measurements. Screen calibration, cameras, lighting, pigments, and other variables can affect what you see. Use these resources to inform your understanding while continuing to develop your own eye and judgment as a painter.</li>
+      <li><b>Protect Your Privacy</b><br>We collect only the information necessary to operate your account, such as your email address for authentication. We do not sell your personal information. Artwork uploaded through the platform remains on your device unless a feature explicitly states otherwise. Please avoid sharing information you would prefer to keep private.</li>
+      <li><b>Age Requirement</b><br>You must be at least 13 years old to create an account.</li>
+      <li><b>A Growing Community</b><br>This platform will continue to evolve as new educational resources and features are introduced. Membership options and platform features may change over time.</li>
+      <li><b>Community Standards and Enforcement</b><br>We reserve the right to remove content, restrict access, or suspend accounts that violate these guidelines or compromise the safety and integrity of the community. Our goal is not to discourage participation, but to maintain an environment where artists can learn, share, and grow together.</li>
     </ol>
     <p class="rules-sub">Last updated November 2026.</p>
     <button class="st-btn" type="button" id="rulesOk">Close</button>
@@ -1511,7 +1511,7 @@ const STUDIO = {
         if (error) throw error;
         $('authDlg').close();
       } else if (mode === 'up') {
-        const { data, error } = await this.sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: back, data: { guidelines: '2026-11', agreed_at: new Date().toISOString() } } });
+        const { data, error } = await this.sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: back, data: { guidelines: '2026-11-26', agreed_at: new Date().toISOString() } } });
         if (error) throw error;
         if (data.session) $('authDlg').close();
         else this.msg('Almost there. Check your email for a confirmation link, then come back and sign in.');
