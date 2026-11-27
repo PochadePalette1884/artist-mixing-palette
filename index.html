@@ -531,7 +531,7 @@ html,body{overflow-x:clip} body{margin:0}
 <div class="wrap">
   <header class="hero" id="hero">
     <div class="acct" id="acct" hidden><button class="acct-btn" id="acctBtn" type="button">Sign in</button>
-      <div class="acct-menu" id="acctMenu" hidden><span class="acct-who" id="acctWho"></span><button type="button" data-go-studio>Studio videos</button><button type="button" id="acctOut">Sign out</button></div></div>
+      <div class="acct-menu" id="acctMenu" hidden><span class="acct-who" id="acctWho"></span><button type="button" data-go-studio>Studio videos</button><button type="button" id="acctMember" hidden>Become a member</button><button type="button" id="acctOut">Sign out</button></div></div>
     <div class="hero-bg"><div class="hero-img" role="img" aria-label="Michael Klein's working palette, thick with paint"></div>
     <div class="hero-shade" aria-hidden="true"></div></div>
     <div class="hero-in">
@@ -722,7 +722,7 @@ html,body{overflow-x:clip} body{margin:0}
   </section>
 
   <section class="card studio" id="studioCard" aria-label="AMP Studio" hidden>
-    <div class="card-head"><h2>AMP Studio</h2><span class="label" id="stLabel">Members</span></div>
+    <div class="card-head"><h2>AMP Studio</h2><span class="st-tier" id="stTier" hidden></span><span class="label" id="stLabel">Members</span></div>
     <div id="stOut" class="st-out"><p class="st-pitch"><strong class="st-lead">Join early, free.</strong> Create a private account to save your palette, upload your artwork, and explore the color clouds in your own paintings. This is the start of a membership community, with new content arriving regularly. Founding members help shape it.</p>
       <div class="st-acts"><button class="st-btn" type="button" data-auth="up">Create a free account</button><button class="st-link" type="button" data-auth="in">I already have one</button><button class="st-link st-rules" type="button" data-rules>Community Guidelines</button></div></div>
     <div id="stIn" class="st-in" hidden>
@@ -824,6 +824,24 @@ html,body{overflow-x:clip} body{margin:0}
   </form>
 </dialog>
 
+<dialog class="auth upg" id="upgDlg" aria-labelledby="upgTitle">
+  <div class="upg-in">
+    <button class="x auth-x" type="button" id="upgClose" aria-label="Close">×</button>
+    <h2 id="upgTitle">Become a member</h2>
+    <p class="upg-why" id="upgWhy"></p>
+    <ul class="upg-list">
+      <li><b>The full AMP Studio library</b> of lessons and demonstrations</li>
+      <li><b>Unlimited paintings</b>: add as many as you like and see their color clouds</li>
+      <li><b>Map the mixes</b> for any piece, with a printable key</li>
+      <li><b>Live view</b> with your camera, as often as you like</li>
+      <li><b>Your palettes and paintings on every device</b> you sign in on</li>
+    </ul>
+    <p class="upg-price" id="upgPrice"></p>
+    <div class="upg-acts"><button class="st-btn" type="button" id="upgGo">Become a member</button><button class="st-link" type="button" id="upgLater">Maybe later</button></div>
+    <p class="upg-fine">Billed securely by Stripe. Cancel anytime from your account.</p>
+  </div>
+</dialog>
+<div class="amp-toast" id="ampToast" role="status" aria-live="polite" hidden></div>
 <dialog class="auth shr" id="shareDlg" aria-labelledby="shareTitle">
   <div class="shr-in">
     <button class="x auth-x" type="button" id="shareClose" aria-label="Close">×</button>
@@ -1002,6 +1020,24 @@ body.mix-empty .hvc{display:none}
 .rules-list b{color:#111; font-weight:600}
 .rules .st-btn{align-self:flex-start}
 .st-rules{font-size:.82rem}
+.upg{width:min(480px, calc(100vw - 24px))}
+.upg .upg-in{display:flex; flex-direction:column; gap:12px; padding:22px 24px; position:relative}
+.upg h2{margin:0 36px 0 0}
+.upg-why{margin:0; color:var(--muted)}
+.upg-why:empty{display:none}
+.upg-list{margin:0; padding-left:1.15em; display:flex; flex-direction:column; gap:7px; line-height:1.45}
+.upg-list b{color:var(--ink); font-weight:600}
+.upg-price{margin:2px 0 0; font-family:var(--mono); color:var(--gold, #d8c08a); font-size:1.05rem}
+.upg-price:empty{display:none}
+.upg-acts{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center}
+.upg-fine{margin:0; font-size:.78rem; color:var(--muted)}
+.st-tier{margin-left:auto; margin-right:10px; font:600 .72rem/1 var(--body); letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
+.st-tier.on{color:#2b2620; background:var(--gold, #d8c08a); border-color:transparent}
+.st-vid.locked .st-th{filter:saturate(.55) brightness(.75)}
+.st-lockb{position:absolute; top:8px; left:8px; font:600 .68rem/1 var(--body); letter-spacing:.06em; text-transform:uppercase; padding:5px 8px; border-radius:999px; background:rgba(20,18,16,.78); color:var(--gold, #d8c08a)}
+.st-lockb.free{color:#e9f1df}
+.st-th{position:relative}
+.amp-toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:9998; max-width:min(520px, calc(100% - 24px)); padding:12px 16px; border-radius:12px; background:#2f2f2f; color:#ece6d8; border:1px solid rgba(216,192,138,.45); box-shadow:0 10px 30px rgba(0,0,0,.45); font-size:.92rem}
 .shr{width:min(560px, calc(100vw - 24px))}
 .shr .shr-in{display:flex; flex-direction:column; gap:12px; padding:22px; position:relative}
 .shr h2{margin:0 36px 0 0}
@@ -1443,8 +1479,15 @@ function reveal(el, block = 'start') {
 const SB_URL = 'https://kuwtznrchpybueorrjqp.supabase.co';
 const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';
+// ---- Membership (Stripe). Leave link empty to keep every feature open with a free account, as before. ----
+const PAY = {
+  link: '',    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
+  portal: '',  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
+  price: ''    // shown on the upgrade window, e.g. '$12 a month'
+};
+const PAID_ON = () => !!PAY.link && STUDIO.on;
 const STUDIO = {
-  on: false, sb: null, user: null, after: null, mode: 'in', vids: null, checked: false, why: '',
+  on: false, sb: null, user: null, member: false, after: null, mode: 'in', vids: null, checked: false, why: '',
   allow(fn, why) { if (!this.on || this.user) return true; this.after = fn; this.why = why;
     if (this.checked) this.open('in', why); return false; }, // before the session check finishes, wait for it
   init() {
@@ -1456,7 +1499,7 @@ const STUDIO = {
       try { this.sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { return this.fail(); }
       this.sb.auth.onAuthStateChange((ev, session) => {
         this.setUser(session ? session.user : null);
-        if (!this.checked) { this.checked = true; if (!this.user && this.after) this.open('in', this.why); }
+        if (!this.checked) { this.checked = true; if (!this.user && this.after) this.open('in', this.why); if (this.user && /member=welcome/.test(location.search)) this.checkMember(10); }
         if (ev === 'PASSWORD_RECOVERY') this.open('reset');
       });
     };
@@ -1477,6 +1520,7 @@ const STUDIO = {
     $('stOut').hidden = !!u; $('stIn').hidden = !u;
     $('stLabel').textContent = u ? 'Video library' : 'Members';
     if (!u) { $('acctMenu').hidden = true; if ($('stLb').open) $('stLb').close(); this.vids = null; }
+    if (was !== now) { this.member = false; this.checkMember(); }
     if (u && was !== now) this.loadVideos();
     try { renderPalLists(); } catch (e) {}
     if (u && this.after) { const f = this.after; this.after = null; if ($('authDlg').open) $('authDlg').close(); setTimeout(f, 50); }
@@ -1494,6 +1538,23 @@ const STUDIO = {
       : mode === 'reset' ? '' : '<button class="st-link" type="button" data-auth="in">Back to sign in</button>';
     if (!d.open) d.showModal();
     setTimeout(() => (mode === 'reset' ? $('authPass') : $('authEmail')).focus(), 30);
+  },
+  async checkMember(tries) { // is this account a paying member? (decided in Supabase, from Stripe)
+    let m = false;
+    if (this.user && this.sb) { try { const { data, error } = await this.sb.rpc('is_member'); if (!error) m = !!data; } catch (e) {} }
+    const changed = m !== this.member; this.member = m; this.memberUI();
+    if (changed && this.user) this.loadVideos();
+    if (m) { if (typeof SYNC !== 'undefined') SYNC.start(); }
+    else if (typeof SYNC !== 'undefined') SYNC.stop();
+    if (!m && tries > 0) setTimeout(() => this.checkMember(tries - 1), 3000); // just paid: Stripe can take a few seconds to tell us
+    if (m && tries !== undefined && /member=welcome/.test(location.search)) { toast('Welcome, member. Everything is unlocked.'); try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+  },
+  memberUI() {
+    const b = $('acctMember'); if (!b) return;
+    b.hidden = !PAID_ON() || (this.member && !PAY.portal);
+    b.textContent = this.member ? 'Manage membership' : 'Become a member';
+    const t = $('stTier'); if (t) { t.hidden = !PAID_ON() || !this.user; t.textContent = this.member ? 'Member' : 'Free account'; t.classList.toggle('on', this.member); }
+    if (typeof renderPalLists === 'function') try { renderPalLists(); } catch (e) {}
   },
   msg(t, err) { const m = $('authMsg'); m.textContent = t; m.classList.toggle('err', !!err); },
   async submit() {
@@ -1537,14 +1598,16 @@ const STUDIO = {
   async loadVideos() {
     const L = $('stList'); L.innerHTML = '<p class="st-empty">Loading videos…</p>';
     let rows = [], err = '';
-    try { const { data, error } = await this.sb.from('videos').select('id,title,description,url,thumb').order('sort', { ascending: true });
-      if (error) err = error.message || String(error); else rows = data || []; } catch (e) { err = String(e && e.message || e); }
+    try { let r = await this.sb.from('video_list').select('id,title,description,thumb,tier').order('sort', { ascending: true });
+      if (r.error) r = await this.sb.from('videos').select('id,title,description,url,thumb').order('sort', { ascending: true }); // before the membership SQL is run
+      if (r.error) err = r.error.message || String(r.error); else rows = r.data || []; } catch (e) { err = String(e && e.message || e); }
     if (err) { console.warn('AMP Studio videos:', err); L.innerHTML = '<p class="st-empty">The videos couldn’t load just now. Please refresh in a moment.</p><p class="st-empty" style="font-size:.75rem;opacity:.7">' + err.replace(/[<>&]/g, '') + '</p>'; this.vids = []; this.arrows(); return; }
     this.vids = rows;
     const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const tint = i => { const h = [32, 205, 8, 140, 265, 48, 180, 330][i % 8]; return `linear-gradient(135deg, hsl(${h} 32% 42%), hsl(${(h + 25) % 360} 22% 24%))`; };
     L.innerHTML = rows.length ? rows.map((v, i) => { const t = this.thumb(v);
-      return `<button class="st-vid" type="button" data-vid="${i}"><div class="st-th" style="background-image:${tint(i)}">${t ? `<img src="${esc(t)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div><b>${esc(v.title)}</b>${v.description ? `<span>${esc(v.description)}</span>` : ''}</button>`; }).join('')
+      const lock = PAID_ON() && !this.member && v.tier === 'member';
+      return `<button class="st-vid${lock ? ' locked' : ''}" type="button" data-vid="${i}"><div class="st-th" style="background-image:${tint(i)}">${t ? `<img src="${esc(t)}" alt="" loading="lazy" onerror="this.remove()">` : ''}${lock ? '<span class="st-lockb">Members</span>' : v.tier === 'free' && PAID_ON() && !this.member ? '<span class="st-lockb free">Free preview</span>' : ''}</div><b>${esc(v.title)}</b>${v.description ? `<span>${esc(v.description)}</span>` : ''}</button>`; }).join('')
       : '<p class="st-empty">The first Studio videos are on the way. They’ll appear here as soon as they’re posted.</p>';
     L.scrollLeft = 0; this.arrows();
   },
@@ -1562,8 +1625,11 @@ const STUDIO = {
     if (m) { const h = m[2] || (String(url).match(/[?&]h=([0-9a-f]+)/) || [])[1]; return 'https://player.vimeo.com/video/' + m[1] + '?autoplay=1' + (h ? '&h=' + h : ''); }
     return '';
   },
-  play(i) {
+  async play(i) {
     const v = this.vids && this.vids[i]; if (!v) return;
+    if (PAID_ON() && !this.member && v.tier === 'member') { UPGRADE.open('the full AMP Studio video library'); return; }
+    if (!v.url) { try { const { data } = await this.sb.from('videos').select('url').eq('id', v.id).maybeSingle(); if (data && data.url) v.url = data.url; } catch (e) {} }
+    if (!v.url) { UPGRADE.open('the full AMP Studio video library'); return; }
     const src = this.embed(v.url);
     if (!src) { window.open(v.url, '_blank', 'noopener'); return; }
     $('stLbTitle').textContent = v.title || ''; $('stLbDesc').textContent = v.description || '';
@@ -1573,6 +1639,7 @@ const STUDIO = {
   wire() {
     $('acctBtn').addEventListener('click', e => { e.stopPropagation(); if (this.user) $('acctMenu').hidden = !$('acctMenu').hidden; else this.open('in', ''); });
     document.addEventListener('click', e => { if (!e.target.closest('#acct')) $('acctMenu').hidden = true; });
+    $('acctMember').addEventListener('click', () => { $('acctMenu').hidden = true; if (this.member && PAY.portal) window.open(PAY.portal + (this.user ? (PAY.portal.includes('?') ? '&' : '?') + 'prefilled_email=' + encodeURIComponent(this.user.email) : ''), '_blank', 'noopener'); else UPGRADE.open(''); });
     $('acctOut').addEventListener('click', async () => { $('acctMenu').hidden = true; if (this.sb) await this.sb.auth.signOut(); });
     document.addEventListener('click', e => {
       if (e.target.closest('[data-rules]')) return; // the guidelines open on their own (below)
@@ -2987,9 +3054,10 @@ function libDB(pool) { // every one- and two-paint mix (with white steps) from a
 }
 var MAP = {
   pending: false, pins: [], auto: [], added: [], set: [], key: '',
-  members() { return !STUDIO.on || !!STUDIO.user; },
+  members() { return PAID_ON() ? STUDIO.member : (!STUDIO.on || !!STUDIO.user); },
   start() { // from the painting bar
     if (!PT.dense.length) { this.pending = true; $('ptFile').click(); return; }
+    if (!paidGate('map', 'Map the mixes')) return; paidUse('map', 'Map the mixes');
     this.open();
   },
   open() {
@@ -3099,6 +3167,7 @@ var MAP = {
     reveal(document.querySelector('[aria-label="Mixer"]'));
   },
   print() {
+    if (PAID_ON() && !STUDIO.member) { UPGRADE.open('the printable key'); return; }
     if (!STUDIO.allow(() => this.print(), 'Sign in to print the key for this piece.')) return;
     let A = document.getElementById('mpPrintArea'); if (!A) { A = document.createElement('div'); A.id = 'mpPrintArea'; document.body.appendChild(A); }
     A.innerHTML = `<h1>Map the mixes</h1><p>${$('mpPal').querySelector('.mp-need').innerHTML} ${this.set.map(id => PIG[id].name).join(', ')}</p>
@@ -3180,11 +3249,12 @@ function syncTreeMode() { // the Palette | Painting switch in the tree's header 
 document.addEventListener('click', e => { const b = e.target.closest('.tmode [data-tm]'); if (b && !b.disabled && (b.dataset.tm === 'painting') !== isPainting()) setTreeMode(b.dataset.tm); });
 syncTreeMode();
 $('ptView').addEventListener('click', () => setTreeMode(isPainting() ? 'palette' : 'painting'));
-$('ptFile').addEventListener('change', e => { if (e.target.files[0]) { if (!isPainting()) setTreeMode('painting'); loadPainting(e.target.files[0]); } e.target.value = ''; });
+$('ptFile').addEventListener('click', e => { if (!paidCan('painting')) { e.preventDefault(); UPGRADE.open('adding a painting'); } });
+$('ptFile').addEventListener('change', e => { if (e.target.files[0]) { if (!paidGate('painting', 'adding a painting')) { e.target.value = ''; return; } paidUse('painting', 'adding a painting'); if (!isPainting()) setTreeMode('painting'); loadPainting(e.target.files[0]); } e.target.value = ''; });
 (() => { const card = $('treeCard'), bar = $('ptBar');
   card.addEventListener('dragover', e => { e.preventDefault(); bar.classList.add('over'); });
   card.addEventListener('dragleave', () => bar.classList.remove('over'));
-  card.addEventListener('drop', e => { e.preventDefault(); bar.classList.remove('over'); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) { if (!isPainting()) setTreeMode('painting'); loadPainting(f); } });
+  card.addEventListener('drop', e => { e.preventDefault(); bar.classList.remove('over'); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) { if (!paidGate('painting', 'adding a painting')) return; paidUse('painting', 'adding a painting'); if (!isPainting()) setTreeMode('painting'); loadPainting(f); } });
 })();
 function setPalette(key) {
   if (!PALETTES[key]) return;
@@ -3288,7 +3358,7 @@ function anyDab(id) {
 PALETTES.schmid.dabs = Object.assign({ tor: "data:image/webp;base64,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", tob: "data:image/webp;base64,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" }, Object.fromEntries(PALETTES.schmid.ids.filter(id => !['tor', 'tob'].includes(id)).map(id => [id, anyDab(id)])));
 const CUSTOM_KEY = 'mmp-custom';
 function loadCustom() { try { const a = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '[]'); return Array.isArray(a) ? a.filter(x => x && x.k && Array.isArray(x.ids)) : []; } catch (e) { return []; } }
-function saveCustomList(list) { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
+function saveCustomList(list) { if (typeof SYNC !== 'undefined' && SYNC.on) SYNC.push({ palettes: list }); try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
 function registerCustom(c) {
   const ids = c.ids.filter(id => PIG[id]);
   PALETTES['u_' + c.k] = { group: 'custom', custom: true, k: c.k, name: c.name || 'My palette', dates: 'your palette', ids, white: 'titanium',
@@ -3899,7 +3969,7 @@ const COLL = (() => {
   function render() {
     const box = $('coll'), row = $('collRow'); if (!box) return;
     box.hidden = !ready || (!items.length && mode === 'none');
-    $('collMsg').textContent = !items.length ? (mode === 'none' ? '' : 'Paintings you add will appear here.') : `${items.length} painting${items.length > 1 ? 's' : ''} · ${mode === 'cloud' ? 'saved to your account' : 'saved in this browser'}`; $('collMsg').title = mode === 'local' ? 'Account storage: ' + COLL_WHY : '';
+    $('collMsg').textContent = !items.length ? (mode === 'none' ? '' : 'Paintings you add will appear here.') : `${items.length} painting${items.length > 1 ? 's' : ''} · ${mode === 'cloud' || mode === 'acct' ? 'saved to your account' : 'saved in this browser'}`; $('collMsg').title = mode === 'local' ? 'Account storage: ' + COLL_WHY : '';
     row.innerHTML = items.map(it => `<div class="coll-item${it.id === current ? ' current' : ''}" role="listitem" data-id="${it.id}">
       <button class="open" title="${esc(it.name)}" aria-label="Open ${esc(it.name)}"><img src="${it.thumb}" alt="" loading="lazy"></button>
       <span class="nm">${esc(it.name)}</span><button class="rm" aria-label="Remove ${esc(it.name)} from the collection" title="Remove">×</button></div>`).join('');
@@ -3929,7 +3999,24 @@ const COLL = (() => {
     ready = true; render();
   }
   if (typeof window.claude === 'undefined' || !window.claude || !window.claude.use) { /* not on claude.ai */ }
+  // members on the website: paintings saved to their account (Supabase storage), so they appear on every device
+  let acct = null;
+  const pushIndex = () => SYNC.push({ collection: items.map(it => ({ id: it.id, name: it.name, size: it.size, thumb: it.thumb, added: it.added, path: it.path })) });
+  const upload = async (id, blob) => { const path = acct.uid + '/' + id + '.jpg'; const { error } = await STUDIO.sb.storage.from('paintings').upload(path, blob, { contentType: 'image/jpeg', upsert: true }); if (error) throw error; return path; };
   return {
+    async useAccount(index, first) {
+      if (mode === 'cloud') return; // inside claude.ai the page keeps its own storage
+      acct = { uid: STUDIO.user.id };
+      let local = []; try { local = (await tx('readonly', st => st.getAll())) || []; } catch (e) {}
+      const list = index.slice();
+      if (first) { // the first time on this device: move what's saved here up to the account
+        for (const v of local) { if (list.some(x => x.name === v.name && x.size === v.size) || !v.blob) continue;
+          try { const path = await upload(v.id, v.blob); list.push({ id: v.id, name: v.name, size: v.size, thumb: v.thumb, added: v.added, path }); } catch (e) { console.warn('collection upload', e); } }
+      }
+      mode = 'acct'; items.length = 0; list.sort((a, b) => (b.added || '').localeCompare(a.added || '')).forEach(v => items.push(v)); ready = true; render();
+      if (first) pushIndex();
+    },
+    useDevice() { if (mode !== 'acct') return; acct = null; useLocal(); },
     async add(im, file) {
       if (mode === 'none' && !ready) return;
       const name = nameOf(file), size = file.size || 0;
@@ -3937,7 +4024,10 @@ const COLL = (() => {
       $('collMsg').textContent = 'Saving to your collection…';
       try {
         const thumb = await thumbOf(im), full = await scaled(im, 1800, 0.9), added = new Date().toISOString();
-        if (mode === 'cloud') {
+        if (mode === 'acct') {
+          const id = 'p' + Date.now().toString(36), path = await upload(id, full.blob);
+          items.unshift({ id, name, size, thumb, added, path }); current = id; pushIndex();
+        } else if (mode === 'cloud') {
           const up = await cloud.assets.upload(full.blob, { type: 'image/jpeg' });
           const ref = await cloud.col.add({ name, size, thumb, asset: up.id, url: up.url, added });
           current = ref.id;
@@ -3953,16 +4043,18 @@ const COLL = (() => {
       const it = items.find(x => x.id === id); if (!it) return;
       $('ptStats').textContent = 'Opening ' + it.name + '…';
       if (!isPainting()) setTreeMode('painting');
+      const get = it.path && mode === 'acct' ? STUDIO.sb.storage.from('paintings').download(it.path).then(r => { if (r.error) throw r.error; return r.data; }) : null;
       const src = it.blob ? URL.createObjectURL(it.blob) : (it.url || (it.asset ? '/_blob/' + it.asset : ''));
-      if (!src) return;
-      fetch(src).then(r => r.blob()).then(b => loadPainting(new File([b], it.name + '.jpg', { type: b.type || 'image/jpeg' }), id))
+      if (!src && !get) return;
+      (get || fetch(src).then(r => r.blob())).then(b => loadPainting(new File([b], it.name + '.jpg', { type: b.type || 'image/jpeg' }), id))
         .catch(() => { $('ptStats').textContent = 'Could not open ' + it.name + ' from the collection.'; });
     },
     async remove(id) {
       const it = items.find(x => x.id === id); if (!it) return;
       if (!confirm(`Remove “${it.name}” from your collection?`)) return;
       try {
-        if (mode === 'cloud') { await cloud.col.doc(id).delete(); if (it.asset) { try { await cloud.assets.delete(it.asset); } catch (e) {} } }
+        if (mode === 'acct') { if (it.path) { try { await STUDIO.sb.storage.from('paintings').remove([it.path]); } catch (e) {} } const k = items.indexOf(it); if (k >= 0) items.splice(k, 1); pushIndex(); }
+        else if (mode === 'cloud') { await cloud.col.doc(id).delete(); if (it.asset) { try { await cloud.assets.delete(it.asset); } catch (e) {} } }
         else { await tx('readwrite', st => st.delete(id)); const k = items.indexOf(it); if (k >= 0) items.splice(k, 1); }
         if (current === id) current = null; render();
       } catch (e) { $('collMsg').textContent = 'Could not remove that painting.'; }
@@ -4302,6 +4394,7 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
     msg('Point your camera at anything. The crosshair reads its color, marks it on the tree and finds its mix.'); render();
   }
   $('lvStart').addEventListener('click', async () => {
+    if (!LIVE.on && !paidGate('live', 'Live view')) return;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg('This browser cannot open a camera here. Use a photo instead.'); return; }
     let perm = null; try { perm = (await navigator.permissions.query({ name: 'camera' })).state; } catch (e) {}
     if (perm === 'denied') { msg(CAM_BLOCKED); return; } // the browser will not ask again once refused: say how to turn it back on
@@ -4309,15 +4402,17 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
     try {
       if (LIVE.stream) LIVE.stream.getTracks().forEach(t => t.stop());
       const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false });
-      LIVE.stream = st; vid.srcObject = st; await vid.play(); open(vid); $('lvStart').textContent = 'Restart camera';
+      LIVE.stream = st; vid.srcObject = st; await vid.play(); open(vid); paidUse('live', 'Live view'); $('lvStart').textContent = 'Restart camera';
       msg('Live. Tap the picture to move the crosshair.'); requestAnimationFrame(tick);
     } catch (e) {
       const inFrame = window.top !== window.self;
       msg(inFrame ? 'The camera is not available in this preview: claude.ai does not let a page use it. Open your site to use the live camera, or use a photo here.' : e && e.name === 'NotAllowedError' ? CAM_BLOCKED : e && e.name === 'NotFoundError' ? 'No camera was found on this device. Use a photo instead.' : 'The camera could not start. Close other apps using it and try again, or use a photo.');
     }
   });
+  $('lvFile').addEventListener('click', e => { if (!LIVE.on && !paidCan('live')) { e.preventDefault(); UPGRADE.open('Live view'); } });
   $('lvFile').addEventListener('change', e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (!LIVE.on) { if (!paidGate('live', 'Live view')) { e.target.value = ''; return; } paidUse('live', 'Live view'); }
     if (LIVE.stream) { LIVE.stream.getTracks().forEach(t => t.stop()); LIVE.stream = null; }
     const url = URL.createObjectURL(f); img.onload = () => { open(img); read(true); msg('Tap the photo to move the crosshair.'); }; img.src = url; e.target.value = '';
   });
@@ -4508,6 +4603,52 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
   document.getElementById('shareClose').addEventListener('click', function(){ d.close(); });
   d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
 })();
+</script>
+
+<script>
+// ---------- membership: gates, the upgrade window, and syncing for members ----------
+function toast(t, ms) { const el = $('ampToast'); if (!el) return; el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, ms || 5200); }
+// one free try of a paid feature, per device; members (and the site before billing is switched on) have no limits
+function paidCan(key) { if (!PAID_ON() || STUDIO.member) return true; if (!key) return false; try { return !localStorage.getItem('amp-try-' + key); } catch (e) { return true; } }
+function paidUse(key, label) { if (!PAID_ON() || STUDIO.member || !key) return; try { if (localStorage.getItem('amp-try-' + key)) return; localStorage.setItem('amp-try-' + key, '1'); } catch (e) {} toast('This is your free try of ' + label + '. Members can use it as often as they like.'); }
+function paidGate(key, label) { if (paidCan(key)) return true; UPGRADE.open(label); return false; }
+var UPGRADE = {
+  open(what) {
+    $('upgWhy').textContent = what ? (STUDIO.member ? '' : 'You’ve used your free try of ' + what + '. Members get it without limits, plus everything below.') : 'Everything in the Artist’s Mixing Palette, without limits.';
+    if (/library/.test(what || '')) $('upgWhy').textContent = 'This lesson is for members. Free accounts get the preview videos; members get the whole library.';
+    $('upgPrice').textContent = PAY.price || '';
+    $('upgGo').textContent = STUDIO.user ? 'Become a member' : 'Create a free account, then join';
+    if (!$('upgDlg').open) $('upgDlg').showModal();
+  },
+  go() {
+    if (!PAY.link) return;
+    if (!STUDIO.user) { $('upgDlg').close(); STUDIO.after = () => UPGRADE.go(); STUDIO.open('up', 'Create your free account first. You’ll go straight on to membership.'); return; }
+    const u = new URL(PAY.link); u.searchParams.set('client_reference_id', STUDIO.user.id); if (STUDIO.user.email) u.searchParams.set('prefilled_email', STUDIO.user.email);
+    location.href = u.toString();
+  }
+};
+$('upgGo').addEventListener('click', () => UPGRADE.go());
+['upgClose', 'upgLater'].forEach(id => $(id).addEventListener('click', () => $('upgDlg').close()));
+$('upgDlg').addEventListener('click', e => { if (e.target === $('upgDlg')) $('upgDlg').close(); });
+// members: saved palettes and the painting collection follow the account to every device
+var SYNC = {
+  on: false, uid: null,
+  async start() {
+    if (this.on || !STUDIO.sb || !STUDIO.user) return; this.on = true; this.uid = STUDIO.user.id;
+    let row = null; try { const { data } = await STUDIO.sb.from('user_data').select('palettes,collection').eq('user_id', this.uid).maybeSingle(); row = data; } catch (e) {}
+    const remote = (row && Array.isArray(row.palettes)) ? row.palettes : [], local = loadCustom(), seenKey = 'amp-synced-' + this.uid;
+    let first = true; try { first = !localStorage.getItem(seenKey); localStorage.setItem(seenKey, '1'); } catch (e) {}
+    const by = {}; remote.forEach(c => by[c.k] = c); if (first || !row) local.forEach(c => { if (!by[c.k]) by[c.k] = c; }); // first sync on a device: keep its palettes too
+    const merged = Object.values(by);
+    local.forEach(c => { if (!by[c.k]) delete PALETTES['u_' + c.k]; });
+    try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(merged)); } catch (e) {}
+    merged.forEach(registerCustom); try { renderPalLists(); } catch (e) {}
+    if (first || !row) this.push({ palettes: merged });
+    if (typeof COLL !== 'undefined' && COLL.useAccount) COLL.useAccount((row && Array.isArray(row.collection)) ? row.collection : [], first || !row);
+  },
+  stop() { if (!this.on) return; this.on = false; this.uid = null; if (typeof COLL !== 'undefined' && COLL.useDevice) COLL.useDevice(); },
+  async push(patch) { if (!this.on) return; try { await STUDIO.sb.from('user_data').upsert(Object.assign({ user_id: this.uid, updated_at: new Date().toISOString() }, patch)); } catch (e) { console.warn('sync', e); } }
+};
 </script>
 
 </body>
