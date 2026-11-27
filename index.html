@@ -1091,7 +1091,7 @@ body.mix-empty .hvc{display:none}
 .bd-acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
 .bd-msg{font-size:.8rem; color:var(--muted)}
 .bd-del{margin-left:auto}
-.pal-row.pal-build{display:block; font-family:var(--body); font-weight:600; color:var(--ink); border-top:1px solid var(--line); border-radius:0 0 10px 10px; margin-top:6px; padding:11px 10px}
+.pal-row.pal-build{display:block; font-family:var(--body); font-weight:600; color:var(--ink); border-bottom:1px solid var(--line); border-radius:10px 10px 0 0; margin-bottom:6px; padding:11px 10px}
 .pal-edit{margin-left:8px; font-size:inherit}
 @media (max-width:700px){ .bd-reach{grid-template-columns:1fr} .bd-item{width:74px} }
 </style>
@@ -1427,7 +1427,7 @@ function munsellText(a) {
 }
 
 
-const state = { mix: {}, strA: 'ac', strB: 'um', tree: 'palette', palette: 'klein', cloud: true, names: true, cloudStyle: 'squares', cloudSrc: 'palette', ground: 'mgrey' };
+const state = { mix: {}, strA: 'ac', strB: 'um', tree: 'palette', palette: 'kleinlim', cloud: true, names: true, cloudStyle: 'squares', cloudSrc: 'palette', ground: 'mgrey' };
 try { const s = localStorage.getItem('mmp-cloud'); if (s !== null) state.cloud = s === '1'; const stv = localStorage.getItem('mmp-style'); if (stv === 'lines' || stv === 'squares') state.cloudStyle = stv; const nmv = localStorage.getItem('mmp-names'); if (nmv !== null) state.names = nmv === '1'; const c = localStorage.getItem('mmp-cloudsrc'); if (c === 'mix' || c === 'palette') state.cloudSrc = c; } catch (e) {}
 
 const $ = id => document.getElementById(id);
@@ -3142,13 +3142,14 @@ function renderPalLists() {
   const open = !!($('palMenu') && !$('palMenu').hidden), cur = curPal();
   const dots = ids => `<span class="pal-dots" aria-hidden="true">${ids.map(id => `<i style="background:${MASS[id]}" title="${PIG[id].name}"></i>`).join('')}</span>`;
   const nameH = P => `${P.name}${P.dates ? ` <span>${P.dates}</span>` : ''}`;
-  const groups = PAL_GROUPS.map(([g, label]) => {
+  const build = '<button class="pal-row pal-build" data-build="1">+ Build your own palette' + (STUDIO.on && !STUDIO.user ? '<span class="lock"> · free account</span>' : '') + '</button>';
+  const groups = build + PAL_GROUPS.map(([g, label]) => {
     let ks = Object.keys(PALETTES).filter(k => (PALETTES[k].group || 'masters') === g);
     if (g === 'masters') ks.sort((a, b) => parseInt(PALETTES[a].dates) - parseInt(PALETTES[b].dates));
     if (!ks.length) return '';
     return `<h4>${label}</h4>` + ks.map(k => { const P = PALETTES[k];
       return `<button class="pal-row" role="option" data-pal="${k}" aria-selected="${k === state.palette}"><span class="pr-name">${nameH(P)}</span><span class="pr-n">${/colors/.test(P.dates || '') ? '' : P.ids.length + ' colors'}</span></button>`; }).join('');
-  }).join('') + '<button class="pal-row pal-build" data-build="1">+ Build your own palette' + (STUDIO.on && !STUDIO.user ? '<span class="lock"> · free account</span>' : '') + '</button>';
+  }).join('');
   $('palList').innerHTML = `<button class="pal-cur" id="palToggle" aria-haspopup="listbox" aria-expanded="${open}" aria-label="Palette: ${cur.name}. Choose another palette">
       <span class="pc-text"><span class="pc-name">${cur.name}</span>${cur.dates ? `<span class="pc-dates">${cur.dates}</span>` : ''}<span class="pc-caret">${Object.keys(PALETTES).filter(k => !k.startsWith('__')).length} palettes ▾</span></span></button>
     <div class="pal-menu" id="palMenu" role="listbox" aria-label="Choose a palette"${open ? '' : ' hidden'}>${groups}</div>`;
@@ -3339,7 +3340,7 @@ const BUILDER = {
   },
   close(restore = true) {
     $('builder').hidden = true; document.body.classList.remove('building'); delete PALETTES.__draft;
-    if (restore) setPalette(this.prev && PALETTES[this.prev] ? this.prev : 'klein');
+    if (restore) setPalette(this.prev && PALETTES[this.prev] ? this.prev : 'kleinlim');
   },
   toggle(id) { const i = this.ids.indexOf(id); if (i >= 0) this.ids.splice(i, 1); else this.ids.push(id); this.apply(); },
   move(i, d) { const j = i + d; if (j < 0 || j >= this.ids.length) return; [this.ids[i], this.ids[j]] = [this.ids[j], this.ids[i]]; this.apply(); },
@@ -3438,7 +3439,7 @@ function shareBase() { const h = location.host || ''; return /^https?:$/.test(lo
   if (m) setTimeout(loadShared, 300);
   STUDIO.init();
 })();
-(() => { let k = 'klein'; try { const s = localStorage.getItem('mmp-palette'); if (s && PALETTES[s]) k = s; } catch (er) {} setPalette(k); })();
+(() => { let k = 'kleinlim'; try { const s = localStorage.getItem('mmp-palette'); if (s && PALETTES[s]) k = s; } catch (er) {} setPalette(k); })();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => drawWheel());
 
 /* ---------- Munsell Book: 40 hue pages (2.5R to 10RP), each value 1–9 by chroma in steps of 2 ---------- */
