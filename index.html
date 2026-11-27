@@ -803,6 +803,7 @@ html,body{overflow-x:clip} body{margin:0}
 
   <p class="note on-bg">Colors come from a spectral pigment model (Kubelka–Munk mixing over 31 wavelength bands), so mixtures darken and dull the way paint does rather than averaging like light. Oleogel is modeled as a perfectly clear medium: it adds no color, it only spreads the pigment thinner in a film of fixed thickness, so the ground shows through. Hiding is measured the way a drawdown card does it, by comparing the film over black with the film over white. The reachable-colors cloud samples every pair of pigments at many ratios, every set of three (when the set is small enough to compute quickly) and several amounts of white, all at full strength. Munsell notation is estimated from CIELAB and rounded to 2.5 hue steps; real tubes vary by brand, oil and load, so treat the numbers as a guide and check against a physical Munsell chart.</p>
 </div>
+<footer class="site-foot on-bg"><a href="terms.html">Terms of Service</a> · <a href="privacy.html">Privacy Policy</a> · <button class="st-link" type="button" data-rules>Community Guidelines</button> · © 2026 Pochade Palette LLC</footer>
 
 <dialog class="st-lb" id="stLb" aria-labelledby="stLbTitle">
   <div class="st-lb-head"><h2 id="stLbTitle"></h2><button class="x" type="button" id="stLbClose" aria-label="Close video">×</button></div>
@@ -817,7 +818,7 @@ html,body{overflow-x:clip} body{margin:0}
     <p class="auth-why" id="authWhy" hidden></p>
     <label class="auth-f" id="authEmailF"><span>Email</span><input type="email" id="authEmail" autocomplete="email" required></label>
     <label class="auth-f" id="authPassF"><span>Password</span><input type="password" id="authPass" autocomplete="current-password" minlength="8" required></label>
-    <label class="auth-agree" id="authAgreeF" hidden><input type="checkbox" id="authAgree"><span>I agree to the <button class="st-link" type="button" data-rules>Community Guidelines</button></span></label>
+    <label class="auth-agree" id="authAgreeF" hidden><input type="checkbox" id="authAgree"><span>I agree to the <button class="st-link" type="button" data-rules>Community Guidelines</button>, <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a></span></label>
     <p class="auth-msg" id="authMsg" role="status"></p>
     <button class="st-btn auth-go" type="submit" id="authGo">Sign in</button>
     <div class="auth-alt" id="authAlt"></div>
@@ -1020,6 +1021,9 @@ body.mix-empty .hvc{display:none}
 .rules-list b{color:#111; font-weight:600}
 .rules .st-btn{align-self:flex-start}
 .st-rules{font-size:.82rem}
+.site-foot{max-width:1240px; margin:8px auto 0; padding:22px max(5vw,16px) 40px; font-size:.82rem; color:var(--muted); text-align:center; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center}
+.site-foot a, .site-foot .st-link{color:var(--muted); font-size:inherit}
+.auth-agree a{color:inherit}
 .upg{width:min(480px, calc(100vw - 24px))}
 .upg .upg-in{display:flex; flex-direction:column; gap:12px; padding:22px 24px; position:relative}
 .upg h2{margin:0 36px 0 0}
@@ -1481,7 +1485,7 @@ const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';
 // ---- Membership (Stripe). Leave link empty to keep every feature open with a free account, as before. ----
 const PAY = {
-  link: 'https://buy.stripe.com/test_00wbJ15FQ42x9lc7Sz4AU00',    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
+  link: '',  // switched off for now; test link was https://buy.stripe.com/test_00wbJ15FQ42x9lc7Sz4AU00    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
   portal: 'https://billing.stripe.com/p/login/test_00wbJ15FQ42x9lc7Sz4AU00',  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
   price: '$12/month'    // shown on the upgrade window, e.g. '$12 a month'
 };
@@ -1499,7 +1503,10 @@ const STUDIO = {
       try { this.sb = window.supabase.createClient(SB_URL, SB_KEY); } catch (e) { return this.fail(); }
       this.sb.auth.onAuthStateChange((ev, session) => {
         this.setUser(session ? session.user : null);
-        if (!this.checked) { this.checked = true; if (!this.user && this.after) this.open('in', this.why); if (this.user && /member=welcome/.test(location.search)) this.checkMember(10); }
+        if (!this.checked) { this.checked = true; const back = /member=welcome/.test(location.search);
+          if (!this.user && back) this.open('in', 'Welcome back! Sign in with the account you joined with to unlock your membership.');
+          else if (!this.user && this.after) this.open('in', this.why);
+          if (this.user && back) this.checkMember(10); }
         if (ev === 'PASSWORD_RECOVERY') this.open('reset');
       });
     };
@@ -1520,7 +1527,7 @@ const STUDIO = {
     $('stOut').hidden = !!u; $('stIn').hidden = !u;
     $('stLabel').textContent = u ? 'Video library' : 'Members';
     if (!u) { $('acctMenu').hidden = true; if ($('stLb').open) $('stLb').close(); this.vids = null; }
-    if (was !== now) { this.member = false; this.checkMember(); }
+    if (was !== now) { this.member = false; this.checkMember(this.checked && u && /member=welcome/.test(location.search) ? 10 : undefined); }
     if (u && was !== now) this.loadVideos();
     try { renderPalLists(); } catch (e) {}
     if (u && this.after) { const f = this.after; this.after = null; if ($('authDlg').open) $('authDlg').close(); setTimeout(f, 50); }
@@ -1563,7 +1570,7 @@ const STUDIO = {
     if (mode !== 'reset' && !/^\S+@\S+\.\S+$/.test(email)) return this.msg('Please enter your email address.', true);
     if (mode !== 'forgot' && mode !== 'in' && pass.length < 8) return this.msg('Use at least 8 characters for the password.', true);
     if (mode === 'in' && !pass) return this.msg('Please enter your password.', true);
-    if (mode === 'up' && !$('authAgree').checked) return this.msg('Please read and agree to the Community Guidelines.', true);
+    if (mode === 'up' && !$('authAgree').checked) return this.msg('Please read and agree to the Community Guidelines, Terms and Privacy Policy.', true);
     $('authGo').disabled = true; this.msg('One moment…');
     const back = shareBase();
     try {
@@ -4464,6 +4471,7 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
   ['rulesClose','rulesOk'].forEach(function(id){ document.getElementById(id).addEventListener('click', function(){ d.close(); }); });
   d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
   document.addEventListener('click', function(e){ if (e.target.closest('[data-rules]')) { e.preventDefault(); if (!d.open) d.showModal(); } });
+  if (location.hash === '#guidelines') setTimeout(function(){ if (!d.open) d.showModal(); }, 600); // linked from the Terms page
 })();
 </script>
 
@@ -4609,12 +4617,17 @@ var LIVE = { on: false, a: null, fx: 0.5, fy: 0.5, held: false, gain: null, lin:
 // ---------- membership: gates, the upgrade window, and syncing for members ----------
 function toast(t, ms) { const el = $('ampToast'); if (!el) return; el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, ms || 5200); }
 // one free try of a paid feature, per device; members (and the site before billing is switched on) have no limits
-function paidCan(key) { if (!PAID_ON() || STUDIO.member) return true; if (!key) return false; try { return !localStorage.getItem('amp-try-' + key); } catch (e) { return true; } }
-function paidUse(key, label) { if (!PAID_ON() || STUDIO.member || !key) return; try { if (localStorage.getItem('amp-try-' + key)) return; localStorage.setItem('amp-try-' + key, '1'); } catch (e) {} toast('This is your free try of ' + label + '. Members can use it as often as they like.'); }
+const FREE_TRIES = 5; // free uses of each paid tool per device before the membership window opens
+function triesUsed(key) { try { return parseInt(localStorage.getItem('amp-try-' + key) || '0', 10) || 0; } catch (e) { return 0; } }
+function paidCan(key) { if (!PAID_ON() || STUDIO.member) return true; if (!key) return false; return triesUsed(key) < FREE_TRIES; }
+function paidUse(key, label) { if (!PAID_ON() || STUDIO.member || !key) return; const n = triesUsed(key) + 1; if (n > FREE_TRIES) return;
+  try { localStorage.setItem('amp-try-' + key, String(n)); } catch (e) {}
+  const left = FREE_TRIES - n;
+  toast(left ? 'Free try ' + n + ' of ' + FREE_TRIES + ' for ' + label + '. Members use it without limits.' : 'That was your last free try of ' + label + '. Members use it without limits.'); }
 function paidGate(key, label) { if (paidCan(key)) return true; UPGRADE.open(label); return false; }
 var UPGRADE = {
   open(what) {
-    $('upgWhy').textContent = what ? (STUDIO.member ? '' : 'You’ve used your free try of ' + what + '. Members get it without limits, plus everything below.') : 'Everything in the Artist’s Mixing Palette, without limits.';
+    $('upgWhy').textContent = what ? (STUDIO.member ? '' : 'You’ve used your ' + FREE_TRIES + ' free tries of ' + what + '. Members get it without limits, plus everything below.') : 'Everything in the Artist’s Mixing Palette, without limits.';
     if (/library/.test(what || '')) $('upgWhy').textContent = 'This lesson is for members. Free accounts get the preview videos; members get the whole library.';
     $('upgPrice').textContent = PAY.price || '';
     $('upgGo').textContent = STUDIO.user ? 'Become a member' : 'Create a free account, then join';
