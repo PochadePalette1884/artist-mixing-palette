@@ -1485,10 +1485,13 @@ const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';
 // ---- Membership (Stripe). Leave link empty to keep every feature open with a free account, as before. ----
 const PAY = {
-  link: '',  // switched off for now; test link was https://buy.stripe.com/test_00wbJ15FQ42x9lc7Sz4AU00    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
-  portal: 'https://billing.stripe.com/p/login/test_00wbJ15FQ42x9lc7Sz4AU00',  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
+  link: 'https://buy.stripe.com/00wbJ15FQ42x9lc7Sz4AU00',  // LIVE    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
+  portal: 'https://billing.stripe.com/p/login/00wbJ15FQ42x9lc7Sz4AU00',  // LIVE  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
   price: '$12/month'    // shown on the upgrade window, e.g. '$12 a month'
 };
+// private test switch: open the site with ?paytest=1 to turn membership on in this browser only (?paytest=0 turns it off)
+(() => { try { const q = new URLSearchParams(location.search).get('paytest'); if (q === '1') localStorage.setItem('amp-paytest', '1'); if (q === '0') localStorage.removeItem('amp-paytest');
+  if (!PAY.link && localStorage.getItem('amp-paytest')) { PAY.link = 'https://buy.stripe.com/test_00wbJ15FQ42x9lc7Sz4AU00'; PAY.portal = 'https://billing.stripe.com/p/login/test_00wbJ15FQ42x9lc7Sz4AU00'; PAY.test = true; } } catch (e) {} })();
 const PAID_ON = () => !!PAY.link && STUDIO.on;
 const STUDIO = {
   on: false, sb: null, user: null, member: false, after: null, mode: 'in', vids: null, checked: false, why: '',
@@ -4629,7 +4632,7 @@ var UPGRADE = {
   open(what) {
     $('upgWhy').textContent = what ? (STUDIO.member ? '' : 'You’ve used your ' + FREE_TRIES + ' free tries of ' + what + '. Members get it without limits, plus everything below.') : 'Everything in the Artist’s Mixing Palette, without limits.';
     if (/library/.test(what || '')) $('upgWhy').textContent = 'This lesson is for members. Free accounts get the preview videos; members get the whole library.';
-    $('upgPrice').textContent = PAY.price || '';
+    $('upgPrice').textContent = (PAY.price || '') + (PAY.test ? '  ·  TEST MODE' : '');
     $('upgGo').textContent = STUDIO.user ? 'Become a member' : 'Create a free account, then join';
     if (!$('upgDlg').open) $('upgDlg').showModal();
   },
