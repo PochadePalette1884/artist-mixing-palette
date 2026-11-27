@@ -1481,9 +1481,9 @@ const SB_KEY = 'sb_publishable_kS0-YK-qs9-eP-Ju6DjBAA_4p2GmMv0';
 const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js';
 // ---- Membership (Stripe). Leave link empty to keep every feature open with a free account, as before. ----
 const PAY = {
-  link: '',    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
-  portal: '',  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
-  price: ''    // shown on the upgrade window, e.g. '$12 a month'
+  link: 'https://buy.stripe.com/test_00wbJ15FQ42x9lc7Sz4AU00',    // Stripe Payment Link for the monthly membership, e.g. 'https://buy.stripe.com/...'
+  portal: 'https://billing.stripe.com/p/login/test_00wbJ15FQ42x9lc7Sz4AU00',  // Stripe customer portal login link, e.g. 'https://billing.stripe.com/p/login/...'
+  price: '$12/month'    // shown on the upgrade window, e.g. '$12 a month'
 };
 const PAID_ON = () => !!PAY.link && STUDIO.on;
 const STUDIO = {
